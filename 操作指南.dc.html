@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "IBM Plex Sans","Noto Sans SC",system-ui,sans-serif; background: #E9E6E0; color: #1B1D22; -webkit-font-smoothing: antialiased; }
+  ::selection { background: #FCEFC9; }
+  ::-webkit-scrollbar { width: 11px; }
+  ::-webkit-scrollbar-thumb { background: #CFCABF; border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+  @media print { body { background: #fff; } .sheet { box-shadow: none !important; margin: 0 !important; } }
+</style>
+</helmet>
+
+<div style="min-height:100vh;width:100%;padding:40px 24px 64px;display:flex;justify-content:center;">
+  <div class="sheet" style="width:840px;max-width:100%;background:#FFFFFF;border-radius:4px;box-shadow:0 4px 24px rgba(20,24,33,.10);overflow:hidden;">
+
+    <!-- header -->
+    <div style="padding:40px 56px 30px;border-bottom:1px solid #ECE8E1;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+        <div style="width:38px;height:38px;border-radius:9px;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;letter-spacing:.5px;">GT</div>
+        <div style="display:flex;flex-direction:column;line-height:1.2;">
+          <span style="font-size:15px;font-weight:600;">Gift Translate</span>
+          <span style="font-size:11.5px;color:#8A8F98;">智能英文文献 · 图片翻译</span>
+        </div>
+        <span style="margin-left:auto;font-size:11.5px;color:#A8A39A;font-family:'IBM Plex Mono',monospace;">v0.1 · 操作指南</span>
+      </div>
+      <h1 style="font-family:'IBM Plex Serif','Noto Serif SC',serif;font-size:34px;font-weight:600;margin:0 0 10px;letter-spacing:-.5px;">操作指南</h1>
+      <p style="font-size:14.5px;line-height:1.7;color:#5B616B;margin:0;max-width:560px;">三分钟上手：导入文献、选择界面形态与翻译模式、悬停查看专业术语释义。下面按使用顺序逐步说明。</p>
+    </div>
+
+    <div style="padding:36px 56px 52px;">
+
+      <!-- 1 快速开始 -->
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:18px;">
+        <span style="width:26px;height:26px;border-radius:50%;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">1</span>
+        <h2 style="font-size:19px;font-weight:600;margin:0;">快速开始</h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:13px;margin-bottom:18px;">
+        <div style="display:flex;gap:13px;align-items:flex-start;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#2F5BD0;font-weight:500;flex:none;width:22px;">01</span>
+          <p style="margin:0;font-size:14px;line-height:1.65;color:#3A3F47;">在左侧<strong style="font-weight:600;color:#1B1D22;">文献库</strong>点击 <span style="font-size:12px;font-weight:500;color:#2F5BD0;background:#E9EFFB;padding:2px 8px;border-radius:6px;">+ 导入</span>，添加 PDF、英文图片，或直接粘贴英文文本。</p>
+        </div>
+        <div style="display:flex;gap:13px;align-items:flex-start;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#2F5BD0;font-weight:500;flex:none;width:22px;">02</span>
+          <p style="margin:0;font-size:14px;line-height:1.65;color:#3A3F47;">在<strong style="font-weight:600;color:#1B1D22;">顶栏</strong>选择界面形态，在<strong style="font-weight:600;color:#1B1D22;">阅读区工具栏</strong>选择翻译模式。</p>
+        </div>
+        <div style="display:flex;gap:13px;align-items:flex-start;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#2F5BD0;font-weight:500;flex:none;width:22px;">03</span>
+          <p style="margin:0;font-size:14px;line-height:1.65;color:#3A3F47;">阅读译文。遇到专业词，<strong style="font-weight:600;color:#1B1D22;">悬停虚线词</strong>查看释义，右栏可查看全文统一术语表。</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;padding:11px 14px;background:#F3F6FD;border:1px solid #E1E9F8;border-radius:9px;font-size:13px;color:#3C5079;line-height:1.6;">
+        <span style="color:#2F5BD0;font-size:8px;">●</span>系统会自动<strong style="font-weight:600;">检测领域</strong>并显示置信度，据此调用对应的专业词库。
+      </div>
+
+      <div style="height:1px;background:#ECE8E1;margin:34px 0;"></div>
+
+      <!-- 2 界面形态 -->
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:18px;">
+        <span style="width:26px;height:26px;border-radius:50%;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">2</span>
+        <h2 style="font-size:19px;font-weight:600;margin:0;">三种界面形态<span style="font-size:13px;font-weight:400;color:#9A958B;margin-left:8px;">顶栏切换</span></h2>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:8px;">
+        <div style="border:1px solid #E6E3DD;border-radius:11px;padding:15px;background:#FBFAF8;">
+          <div style="font-size:11px;font-weight:600;color:#2F5BD0;margin-bottom:7px;">三栏阅读</div>
+          <div style="font-size:13px;line-height:1.6;color:#4A4F57;">文献库 + 阅读区 + 术语侧栏，适合长文献<strong style="font-weight:600;color:#1B1D22;">通读</strong>。</div>
+        </div>
+        <div style="border:1px solid #E6E3DD;border-radius:11px;padding:15px;background:#FBFAF8;">
+          <div style="font-size:11px;font-weight:600;color:#2F5BD0;margin-bottom:7px;">双栏对照</div>
+          <div style="font-size:13px;line-height:1.6;color:#4A4F57;">左原文 / 右译文并排，适合<strong style="font-weight:600;color:#1B1D22;">精读校对</strong>。</div>
+        </div>
+        <div style="border:1px solid #E6E3DD;border-radius:11px;padding:15px;background:#FBFAF8;">
+          <div style="font-size:11px;font-weight:600;color:#2F5BD0;margin-bottom:7px;">划词悬浮球</div>
+          <div style="font-size:13px;line-height:1.6;color:#4A4F57;">贴边小球，网页/PDF 上<strong style="font-weight:600;color:#1B1D22;">选中即译</strong>，适合零散查阅。点小球展开 / 收起，支持桌面与手机两种形态。</div>
+        </div>
+      </div>
+
+      <div style="height:1px;background:#ECE8E1;margin:34px 0;"></div>
+
+      <!-- 3 翻译模式 -->
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:18px;">
+        <span style="width:26px;height:26px;border-radius:50%;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">3</span>
+        <h2 style="font-size:19px;font-weight:600;margin:0;">六种翻译模式<span style="font-size:13px;font-weight:400;color:#9A958B;margin-left:8px;">阅读区工具栏切换</span></h2>
+      </div>
+      <div style="display:flex;flex-direction:column;">
+        <div style="display:flex;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px solid #F1EDE5;">
+          <span style="flex:none;width:96px;font-size:13px;font-weight:600;color:#2F5BD0;">学术翻译</span>
+          <span style="font-size:13.5px;line-height:1.6;color:#4A4F57;">结合学科背景与全文逻辑，术语全文统一，符合中文学术表达。</span>
+        </div>
+        <div style="display:flex;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px solid #F1EDE5;">
+          <span style="flex:none;width:96px;font-size:13px;font-weight:600;color:#2F5BD0;">逐句对照</span>
+          <span style="font-size:13.5px;line-height:1.6;color:#4A4F57;">原文与译文逐句对齐，便于核对每一句。</span>
+        </div>
+        <div style="display:flex;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px solid #F1EDE5;">
+          <span style="flex:none;width:96px;font-size:13px;font-weight:600;color:#2F5BD0;">术语解释</span>
+          <span style="font-size:13.5px;line-height:1.6;color:#4A4F57;">突出专业词汇，联动右栏释义与歧义说明。</span>
+        </div>
+        <div style="display:flex;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px solid #F1EDE5;">
+          <span style="flex:none;width:96px;font-size:13px;font-weight:600;color:#2F5BD0;">图片 OCR</span>
+          <span style="font-size:13.5px;line-height:1.6;color:#4A4F57;">识别图片中的英文后翻译，尽量保留段落结构与标题层级。</span>
+        </div>
+        <div style="display:flex;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px solid #F1EDE5;">
+          <span style="flex:none;width:96px;font-size:13px;font-weight:600;color:#2F5BD0;">润色</span>
+          <span style="font-size:13.5px;line-height:1.6;color:#4A4F57;">在忠实原意的基础上优化中文表达的流畅度。</span>
+        </div>
+        <div style="display:flex;gap:14px;align-items:baseline;padding:11px 0;">
+          <span style="flex:none;width:96px;font-size:13px;font-weight:600;color:#2F5BD0;">普通</span>
+          <span style="font-size:13.5px;line-height:1.6;color:#4A4F57;">通用直译，速度优先。</span>
+        </div>
+      </div>
+
+      <div style="height:1px;background:#ECE8E1;margin:34px 0;"></div>
+
+      <!-- 4 术语与释义 -->
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:18px;">
+        <span style="width:26px;height:26px;border-radius:50%;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">4</span>
+        <h2 style="font-size:19px;font-weight:600;margin:0;">术语与释义</h2>
+      </div>
+      <p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#3A3F47;">正文中带<span style="border-bottom:1.5px dotted #2F5BD0;padding:0 1px;">虚线下划线</span>的是已识别的专业术语。<strong style="font-weight:600;color:#1B1D22;">悬停</strong>即弹出释义卡片，包含推荐译法、释义、常见译法与适用语境，多义词还会给出歧义提示。</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div style="border:1px solid #E6E3DD;border-radius:11px;padding:14px;">
+          <div style="font-size:12.5px;font-weight:600;margin-bottom:5px;">术语表</div>
+          <div style="font-size:12.5px;line-height:1.6;color:#6B7078;">全文统一译名，同一术语前后一致。</div>
+        </div>
+        <div style="border:1px solid #E6E3DD;border-radius:11px;padding:14px;">
+          <div style="font-size:12.5px;font-weight:600;margin-bottom:5px;">词汇解释</div>
+          <div style="font-size:12.5px;line-height:1.6;color:#6B7078;">缩写、复杂概念的释义与适用语境。</div>
+        </div>
+        <div style="border:1px solid #E6E3DD;border-radius:11px;padding:14px;">
+          <div style="font-size:12.5px;font-weight:600;margin-bottom:5px;">歧义说明</div>
+          <div style="font-size:12.5px;line-height:1.6;color:#6B7078;">多义词的不同译法与推荐译法。</div>
+        </div>
+      </div>
+
+      <div style="height:1px;background:#ECE8E1;margin:34px 0;"></div>
+
+      <!-- 5 图片 OCR + 6 词库 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:34px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:16px;">
+            <span style="width:26px;height:26px;border-radius:50%;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">5</span>
+            <h2 style="font-size:18px;font-weight:600;margin:0;">图片 OCR 翻译</h2>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <p style="margin:0;font-size:13.5px;line-height:1.6;color:#3A3F47;"><span style="font-family:'IBM Plex Mono',monospace;color:#2F5BD0;font-size:12px;">01</span> 切到「图片 OCR」模式，或导入图片文献。</p>
+            <p style="margin:0;font-size:13.5px;line-height:1.6;color:#3A3F47;"><span style="font-family:'IBM Plex Mono',monospace;color:#2F5BD0;font-size:12px;">02</span> 系统识别英文并按原版式还原。</p>
+            <p style="margin:0;font-size:13.5px;line-height:1.6;color:#3A3F47;"><span style="font-family:'IBM Plex Mono',monospace;color:#2F5BD0;font-size:12px;">03</span> 查看「识别结果 + 译文」，术语同样可悬停。</p>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:16px;">
+            <span style="width:26px;height:26px;border-radius:50%;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">6</span>
+            <h2 style="font-size:18px;font-weight:600;margin:0;">词库与联网</h2>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <p style="margin:0;font-size:13.5px;line-height:1.6;color:#3A3F47;">顶栏 <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#2E9E6B;display:inline-block;"></span><span style="color:#2E7D5B;font-weight:500;">词库在线</span></span> 指示联网状态。</p>
+            <p style="margin:0;font-size:13.5px;line-height:1.6;color:#3A3F47;">内置 6 部专业词库，按检测领域自动调用。</p>
+            <p style="margin:0;font-size:13.5px;line-height:1.6;color:#3A3F47;">联网时定期更新术语与新概念，新词可即时检索给出推荐译法。</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:1px;background:#ECE8E1;margin:34px 0;"></div>
+
+      <!-- 小贴士 -->
+      <div style="background:#FBF6EC;border:1px solid #EFE2C8;border-radius:12px;padding:20px 22px;">
+        <div style="font-size:14px;font-weight:600;color:#9A6B1E;margin-bottom:12px;">小贴士</div>
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <div style="display:flex;gap:9px;font-size:13.5px;line-height:1.6;color:#5B5249;"><span style="color:#C79A45;">·</span>同一术语全文保持统一译名，可在术语表逐条核对。</div>
+          <div style="display:flex;gap:9px;font-size:13.5px;line-height:1.6;color:#5B5249;"><span style="color:#C79A45;">·</span>阅读区可「复制译文 / 导出」，右栏可「导出术语表」。</div>
+          <div style="display:flex;gap:9px;font-size:13.5px;line-height:1.6;color:#5B5249;"><span style="color:#C79A45;">·</span>悬浮球贴边停靠，划词即译；不用时点小球收起。</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="padding:18px 56px;border-top:1px solid #ECE8E1;display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:#A8A39A;">
+      <span>Gift Translate · 智能英文翻译</span>
+      <span style="font-family:'IBM Plex Mono',monospace;">操作指南 · v0.1</span>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{ &quot;$preview&quot;: { &quot;width&quot;: &quot;100%&quot;, &quot;height&quot;: &quot;100%&quot; } }"></script>
+</body>
+</html>

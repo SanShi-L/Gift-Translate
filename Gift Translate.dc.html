@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { font-family: "IBM Plex Sans","Noto Sans SC",system-ui,sans-serif; background: #FBFAF8; color: #1B1D22; -webkit-font-smoothing: antialiased; }
+  ::selection { background: #FCEFC9; }
+  button { font-family: inherit; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #DAD6CD; border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background: #C7C2B8; background-clip: content-box; }
+</style>
+</helmet>
+
+<div style="height:100vh;width:100%;display:flex;flex-direction:column;background:#FBFAF8;overflow:hidden;">
+
+  <!-- ============ TOP BAR ============ -->
+  <div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#FFFFFF;border-bottom:1px solid #E6E3DD;">
+    <div style="display:flex;align-items:center;gap:11px;">
+      <div style="width:32px;height:32px;border-radius:8px;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;letter-spacing:.5px;">GT</div>
+      <div style="display:flex;flex-direction:column;line-height:1.15;">
+        <span style="font-size:14.5px;font-weight:600;color:#1B1D22;">Gift Translate</span>
+        <span style="font-size:11px;color:#8A8F98;">智能英文文献 · 图片翻译</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <sc-if value="{{isDesktop}}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;gap:3px;background:#F1EFEA;padding:3px;border-radius:9px;">
+          <sc-for list="{{layouts}}" as="l" hint-placeholder-count="3"><button onClick="{{l.onClick}}" style="{{l.style}}">{{l.label}}</button></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{isDesktop}}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#5B616B;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#2E9E6B;box-shadow:0 0 0 3px rgba(46,158,107,.15);"></span>词库在线 · 今日已更新
+        </div>
+      </sc-if>
+      <div style="width:1px;height:20px;background:#E6E3DD;"></div>
+      <sc-if value="{{signedIn}}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{toggleAccount}}" style="display:flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;border:1px solid #E0DCD3;border-radius:20px;cursor:pointer;">
+          <span style="width:24px;height:24px;border-radius:50%;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">顾</span>
+          <span style="font-size:12px;font-weight:500;color:#3A3F47;">已同步</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{notSignedIn}}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{toggleAccount}}" style="display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:8px;font-size:12.5px;font-weight:500;border:1px solid #E0DCD3;background:#fff;color:#5B616B;cursor:pointer;">登录 / 备份</button>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- ============ LAYOUT A : 三栏阅读 ============ -->
+  <sc-if value="{{isA}}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;min-height:0;display:flex;">
+
+    <!-- LEFT : 文献库 -->
+    <div style="{{libPanelStyle}}">
+      <div style="padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14px;font-weight:600;color:#1B1D22;">文献库</span>
+          <span style="font-size:11px;font-weight:600;color:#8A8F98;background:#EEEBE4;padding:1px 7px;border-radius:9px;">5</span>
+        </div>
+        <button style="font-size:12px;font-weight:500;color:#2F5BD0;background:#E9EFFB;border:none;padding:5px 10px;border-radius:7px;cursor:pointer;">+ 导入</button>
+      </div>
+      <div style="padding:0 14px 10px;">
+        <div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:#fff;border:1px solid #E6E3DD;border-radius:8px;font-size:12.5px;color:#A8A39A;">
+          <span style="font-size:13px;">⌕</span>搜索文献 / 术语
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:2px 10px 16px;">
+        <sc-for list="{{docs}}" as="doc" hint-placeholder-count="3">
+          <div onClick="{{doc.onClick}}" style="{{doc.cardStyle}}">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+              <span style="{{doc.badgeStyle}}">{{doc.typeLabel}}</span>
+              <span style="font-size:10.5px;color:#9A958B;">{{doc.domain}}</span>
+            </div>
+            <div style="font-size:13px;font-weight:500;color:#2A2D33;line-height:1.4;margin-bottom:4px;">{{doc.title}}</div>
+            <div style="font-size:11px;color:#A8A39A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{doc.source}}</div>
+          </div>
+        </sc-for>
+        <div style="font-size:10.5px;font-weight:600;letter-spacing:.6px;color:#B0AAA0;padding:14px 4px 6px;">未解析</div>
+        <sc-for list="{{placeholders}}" as="p" hint-placeholder-count="2">
+          <div style="opacity:.5;padding:11px 12px;border-radius:9px;margin-bottom:4px;">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
+              <span style="font-size:9.5px;font-weight:700;color:#6B7078;background:#ECEAE4;padding:2px 5px;border-radius:4px;">PDF</span>
+              <span style="font-size:10.5px;color:#A8A39A;">{{p.domain}}</span>
+            </div>
+            <div style="font-size:12.5px;color:#6B7078;line-height:1.4;">{{p.title}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- CENTER : 阅读区 -->
+    <div style="{{centerPanelStyle}}">
+      <div style="flex:none;padding:15px 28px 14px;border-bottom:1px solid #EFEBE3;background:#fff;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:13px;">
+          <div style="min-width:0;">
+            <div style="font-family:'IBM Plex Serif','Noto Serif SC',serif;font-size:18px;font-weight:600;color:#1B1D22;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{docTitle}}</div>
+            <div style="font-size:11.5px;color:#9A958B;margin-top:3px;">{{docSource}}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex:none;">
+            <button style="padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:500;border:1px solid #E0DCD3;background:#fff;color:#5B616B;cursor:pointer;">复制译文</button>
+            <button style="padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:600;border:1px solid #2F5BD0;background:#2F5BD0;color:#fff;cursor:pointer;">导出</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:#F3F6FD;border:1px solid #E1E9F8;border-radius:8px;font-size:12px;color:#3C5079;">
+            <span style="font-size:10px;color:#2F5BD0;">检测领域</span>
+            <span style="font-weight:600;">{{domainText}}</span>
+            <span style="color:#8AA0CC;">· 置信 {{conf}}</span>
+          </div>
+          <div style="width:1px;height:20px;background:#E6E3DD;"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <sc-for list="{{modes}}" as="m" hint-placeholder-count="6"><button onClick="{{m.onClick}}" style="{{m.style}}">{{m.label}}</button></sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;overflow:auto;padding:30px 28px 64px;">
+        <div style="max-width:772px;margin:0 auto;">
+
+          <sc-if value="{{bannerVisible}}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:9px;align-items:center;padding:10px 14px;background:#F3F6FD;border:1px solid #E1E9F8;border-radius:9px;margin-bottom:24px;font-size:12.5px;color:#3C5079;">
+              <span style="color:#2F5BD0;font-size:8px;">●</span>{{bannerText}}
+            </div>
+          </sc-if>
+
+          <!-- flow translation (academic / term / polish / normal) -->
+          <sc-if value="{{showFlow}}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{paras}}" as="para" hint-placeholder-count="4">
+              <p style="{{pStyle}}"><sc-for list="{{para.zhSegs}}" as="seg" hint-placeholder-count="6"><span data-term="{{seg.termId}}" style="{{seg.style}}" onMouseEnter="{{onTermEnter}}" onMouseLeave="{{onTermLeave}}">{{seg.text}}</span></sc-for></p>
+            </sc-for>
+          </sc-if>
+
+          <!-- sentence by sentence -->
+          <sc-if value="{{showSentence}}" hint-placeholder-val="{{ false }}">
+            <sc-for list="{{paras}}" as="para" hint-placeholder-count="4">
+              <div style="margin-bottom:24px;padding-bottom:22px;border-bottom:1px dashed #ECE7DF;">
+                <div style="{{sOrigStyle}}"><sc-for list="{{para.oSegs}}" as="seg" hint-placeholder-count="6"><span data-term="{{seg.termId}}" style="{{seg.style}}" onMouseEnter="{{onTermEnter}}" onMouseLeave="{{onTermLeave}}">{{seg.text}}</span></sc-for></div>
+                <div style="display:flex;gap:10px;align-items:stretch;">
+                  <span style="flex:none;width:3px;background:#2F5BD0;border-radius:2px;"></span>
+                  <div style="{{sZhStyle}}"><sc-for list="{{para.zhSegs}}" as="seg" hint-placeholder-count="6"><span data-term="{{seg.termId}}" style="{{seg.style}}" onMouseEnter="{{onTermEnter}}" onMouseLeave="{{onTermLeave}}">{{seg.text}}</span></sc-for></div>
+                </div>
+              </div>
+            </sc-for>
+          </sc-if>
+
+          <!-- OCR result -->
+          <sc-if value="{{showOcrResult}}" hint-placeholder-val="{{ false }}">
+            <div style="height:230px;border-radius:11px;border:1px solid #E6E3DD;background:repeating-linear-gradient(135deg,#F5F3EF 0 11px,#ECE8E1 11px 22px);display:flex;align-items:center;justify-content:center;margin-bottom:20px;position:relative;">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;letter-spacing:.5px;">scanned page · 1920 × 1080</span>
+              <span style="position:absolute;left:12px;top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#B0AAA0;">IMG · OCR</span>
+            </div>
+            <div style="font-size:11.5px;font-weight:600;letter-spacing:.6px;color:#8A8F98;margin-bottom:8px;">OCR 识别结果（保留版式）</div>
+            <div style="font-family:'IBM Plex Serif','Noto Serif SC',serif;font-size:15.5px;line-height:1.75;color:#3A3F47;padding:13px 15px;background:#FBFAF8;border:1px solid #EFECE6;border-radius:9px;margin-bottom:20px;"><sc-for list="{{ocrSegsO}}" as="seg" hint-placeholder-count="4"><span data-term="{{seg.termId}}" style="{{seg.style}}" onMouseEnter="{{onTermEnter}}" onMouseLeave="{{onTermLeave}}">{{seg.text}}</span></sc-for></div>
+            <div style="font-size:11.5px;font-weight:600;letter-spacing:.6px;color:#8A8F98;margin-bottom:8px;">译文</div>
+            <p style="{{pStyle}}"><sc-for list="{{ocrSegsZ}}" as="seg" hint-placeholder-count="4"><span data-term="{{seg.termId}}" style="{{seg.style}}" onMouseEnter="{{onTermEnter}}" onMouseLeave="{{onTermLeave}}">{{seg.text}}</span></sc-for></p>
+          </sc-if>
+
+          <!-- OCR dropzone (non-image doc) -->
+          <sc-if value="{{showDrop}}" hint-placeholder-val="{{ false }}">
+            <div style="border:1.5px dashed #CBC8C0;border-radius:12px;padding:56px 20px;text-align:center;background:#FBFAF8;">
+              <div style="font-size:14px;font-weight:600;color:#5B616B;margin-bottom:7px;">拖拽、粘贴或点击上传图片</div>
+              <div style="font-size:12.5px;color:#9A958B;line-height:1.6;">自动识别英文文字，结合上下文翻译<br>并尽量保留段落结构与标题层级</div>
+            </div>
+          </sc-if>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT : 译文 / 术语侧栏 -->
+    <div style="{{sidePanelStyle}}">
+      <div style="display:flex;border-bottom:1px solid #E6E3DD;padding:0 8px;background:#fff;">
+        <sc-for list="{{sideTabs}}" as="t" hint-placeholder-count="3"><button onClick="{{t.onClick}}" style="{{t.style}}">{{t.label}} <span style="font-size:10px;color:#A8A39A;">{{t.n}}</span></button></sc-for>
+      </div>
+      <div style="flex:1;overflow:auto;">
+
+        <sc-if value="{{showGloss}}" hint-placeholder-val="{{ true }}">
+          <div style="padding:6px 16px 30px;">
+            <sc-for list="{{glossary}}" as="g" hint-placeholder-count="6">
+              <div style="padding:13px 0;border-bottom:1px solid #EFECE6;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#2F5BD0;font-weight:500;">{{g.en}}</span>
+                  <span style="font-size:10px;font-weight:600;color:#8A8F98;background:#EEEBE4;padding:2px 6px;border-radius:5px;white-space:nowrap;">{{g.domain}}</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                  <span style="font-size:16px;font-weight:600;color:#1B1D22;">{{g.zh}}</span>
+                  <span style="font-size:9.5px;font-weight:700;color:#2E7D5B;background:#E6F2EC;padding:2px 6px;border-radius:5px;">统一译名</span>
+                </div>
+                <div style="font-size:11.5px;color:#9A958B;margin-top:5px;">常见 · {{g.commonStr}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{showExplain}}" hint-placeholder-val="{{ false }}">
+          <div style="padding:6px 16px 30px;">
+            <sc-for list="{{explanations}}" as="g" hint-placeholder-count="6">
+              <div style="padding:13px 0;border-bottom:1px solid #EFECE6;">
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#2F5BD0;">{{g.en}}</span>
+                  <span style="font-size:14px;font-weight:600;color:#1B1D22;">{{g.zh}}</span>
+                </div>
+                <div style="font-size:13px;line-height:1.7;color:#4A4F57;">{{g.defn}}</div>
+                <div style="font-size:11.5px;color:#9A958B;margin-top:7px;">适用语境 · {{g.context}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{showAmbig}}" hint-placeholder-val="{{ false }}">
+          <div style="padding:10px 16px 30px;">
+            <sc-for list="{{ambiguities}}" as="g" hint-placeholder-count="2">
+              <div style="padding:12px 13px;margin-bottom:11px;background:#FBF6EC;border:1px solid #EFE2C8;border-radius:9px;">
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;">
+                  <span style="font-size:9.5px;font-weight:700;color:#9A6B1E;background:#F2E3C4;padding:2px 6px;border-radius:5px;">歧义</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5B616B;">{{g.en}}</span>
+                </div>
+                <div style="font-size:12.5px;line-height:1.7;color:#5B5249;margin-bottom:7px;">{{g.note}}</div>
+                <div style="font-size:12.5px;color:#1B1D22;">推荐译法 · <span style="font-weight:600;color:#9A6B1E;">{{g.recommended}}</span></div>
+              </div>
+            </sc-for>
+            <sc-if value="{{noAmbig}}" hint-placeholder-val="{{ false }}">
+              <div style="padding:30px 10px;text-align:center;font-size:12.5px;color:#A8A39A;">本文未发现明显歧义</div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+      </div>
+      <div style="flex:none;padding:11px 16px;border-top:1px solid #E6E3DD;display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:#8A8F98;">
+        <span>术语来自 6 部专业词库</span>
+        <button style="font-size:11.5px;font-weight:500;color:#2F5BD0;background:none;border:none;cursor:pointer;padding:0;">导出术语表</button>
+      </div>
+    </div>
+
+  </div>
+  </sc-if>
+
+  <!-- ============ LAYOUT B : 双栏对照 ============ -->
+  <sc-if value="{{isB}}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:#fff;">
+    <div style="flex:none;padding:13px 26px;border-bottom:1px solid #EFEBE3;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid #E0DCD3;border-radius:9px;background:#fff;cursor:pointer;">
+          <span style="font-family:'IBM Plex Serif','Noto Serif SC',serif;font-size:14px;font-weight:600;color:#1B1D22;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{docTitle}}</span>
+          <span style="color:#A8A39A;font-size:11px;">▾</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:#F3F6FD;border:1px solid #E1E9F8;border-radius:8px;font-size:12px;color:#3C5079;">
+          <span style="font-size:10px;color:#2F5BD0;">领域</span><span style="font-weight:600;">{{domainText}}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <sc-for list="{{modes}}" as="m" hint-placeholder-count="6"><button onClick="{{m.onClick}}" style="{{m.style}}">{{m.label}}</button></sc-for>
+      </div>
+    </div>
+    <div style="flex:none;padding:9px 26px;border-bottom:1px solid #F1EDE5;background:#FBFAF8;display:flex;align-items:center;gap:8px;overflow-x:auto;">
+      <span style="font-size:11px;font-weight:600;color:#8A8F98;flex:none;">术语表</span>
+      <sc-for list="{{glossChips}}" as="g" hint-placeholder-count="6"><span style="flex:none;display:flex;align-items:center;gap:6px;padding:4px 9px;background:#fff;border:1px solid #E6E3DD;border-radius:14px;font-size:11.5px;"><span style="font-family:'IBM Plex Mono',monospace;color:#2F5BD0;">{{g.en}}</span><span style="color:#C9C4BB;">→</span><span style="color:#1B1D22;font-weight:500;">{{g.zh}}</span></span></sc-for>
+    </div>
+    <div style="flex:1;min-height:0;display:flex;">
+      <div style="flex:1;min-width:0;overflow:auto;padding:28px 32px 60px;border-right:1px solid #EFEBE3;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;color:#B0AAA0;margin-bottom:18px;">ORIGINAL · 英文原文</div>
+        <sc-for list="{{paras}}" as="para" hint-placeholder-count="4"><p style="{{bOrigStyle}}"><sc-for list="{{para.oSegs}}" as="seg" hint-placeholder-count="6"><span data-term="{{seg.termId}}" style="{{seg.style}}" onMouseEnter="{{onTermEnter}}" onMouseLeave="{{onTermLeave}}">{{seg.text}}</span></sc-for></p></sc-for>
+      </div>
+      <div style="flex:1;min-width:0;overflow:auto;padding:28px 32px 60px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;color:#2F5BD0;margin-bottom:18px;">译文 · 中文</div>
+        <sc-for list="{{paras}}" as="para" hint-placeholder-count="4"><p style="{{pStyle}}"><sc-for list="{{para.zhSegs}}" as="seg" hint-placeholder-count="6"><span data-term="{{seg.termId}}" style="{{seg.style}}" onMouseEnter="{{onTermEnter}}" onMouseLeave="{{onTermLeave}}">{{seg.text}}</span></sc-for></p></sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ LAYOUT C : 划词悬浮窗 ============ -->
+  <sc-if value="{{isC}}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;min-height:0;position:relative;background:#E7E4DE;overflow:hidden;">
+
+    <!-- faux page behind -->
+    <div style="position:absolute;inset:0;display:flex;justify-content:center;padding:42px 42px 0;overflow:hidden;">
+      <div style="width:720px;max-width:100%;background:#fff;border-radius:6px 6px 0 0;box-shadow:0 2px 18px rgba(0,0,0,.08);padding:46px 56px;">
+        <div style="height:24px;width:56%;background:#EDEAE3;border-radius:4px;margin-bottom:26px;"></div>
+        <div style="height:11px;width:100%;background:#F0EDE6;border-radius:4px;margin-bottom:11px;"></div>
+        <div style="height:11px;width:93%;background:#F0EDE6;border-radius:4px;margin-bottom:24px;"></div>
+
+        <!-- highlighted phrase + anchored selection bubble -->
+        <div style="position:relative;font-family:'IBM Plex Serif','Noto Serif SC',serif;font-size:14.5px;line-height:2;color:#3A3F47;margin-bottom:24px;">We propose a network that dispenses with recurrence entirely and instead <span style="background:#FCEFC9;border-bottom:2px solid #E2B94B;padding:1px 2px;border-radius:2px;">computes representations through a self-attention mechanism</span>, allowing the model to learn contextual relationships in parallel.
+          <div style="position:absolute;left:24px;top:calc(100% + 12px);z-index:6;width:332px;max-width:88vw;">
+            <div style="position:absolute;left:48px;top:-6px;width:12px;height:12px;background:#fff;border-left:1px solid #E1DED6;border-top:1px solid #E1DED6;transform:rotate(45deg);"></div>
+            <div style="position:relative;background:#fff;border:1px solid #E1DED6;border-radius:13px;box-shadow:0 18px 46px rgba(20,24,33,.26);overflow:hidden;font-family:'IBM Plex Sans','Noto Sans SC',sans-serif;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-bottom:1px solid #F0EDE6;">
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <div style="width:20px;height:20px;border-radius:6px;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;">GT</div>
+                  <span style="font-size:12.5px;font-weight:600;color:#1B1D22;">划词翻译</span>
+                  <span style="font-size:10px;color:#9A958B;">· 学术模式</span>
+                </div>
+                <span style="font-size:15px;color:#B0AAA0;cursor:pointer;line-height:1;">×</span>
+              </div>
+              <div style="padding:12px 13px;">
+                <div style="font-size:12px;color:#7C8089;margin-bottom:9px;line-height:1.55;font-family:'IBM Plex Serif',serif;">computes representations through a self-attention mechanism</div>
+                <div style="font-family:'IBM Plex Serif','Noto Serif SC',serif;font-size:16px;line-height:1.7;color:#1B1D22;margin-bottom:11px;">通过<span style="background:#F6EBD4;border-bottom:1.5px dotted #B07D2A;border-radius:2px;padding:0 1px;">自注意力</span>机制来计算<span style="border-bottom:1.5px dotted #2F5BD0;">表示</span></div>
+                <div style="display:flex;align-items:center;gap:7px;background:#FBFAF8;border:1px solid #EFECE6;border-radius:8px;padding:7px 10px;">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#2F5BD0;">self-attention</span>
+                  <span style="color:#C9C4BB;">→</span>
+                  <span style="font-size:13px;font-weight:600;color:#1B1D22;">自注意力</span>
+                  <span style="font-size:9px;font-weight:700;color:#2E7D5B;background:#E6F2EC;padding:1px 5px;border-radius:4px;">推荐</span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;padding:0 13px 12px;">
+                <button onClick="{{openReader}}" style="flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #2F5BD0;background:#2F5BD0;color:#fff;cursor:pointer;">在阅读器中打开</button>
+                <button style="padding:8px 11px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid #E0DCD3;background:#fff;color:#5B616B;cursor:pointer;">朗读</button>
+                <button style="padding:8px 11px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid #E0DCD3;background:#fff;color:#5B616B;cursor:pointer;">复制</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:11px;width:97%;background:#F0EDE6;border-radius:4px;margin-bottom:11px;"></div>
+        <div style="height:11px;width:88%;background:#F0EDE6;border-radius:4px;margin-bottom:11px;"></div>
+        <div style="height:11px;width:92%;background:#F0EDE6;border-radius:4px;margin-bottom:11px;"></div>
+        <div style="height:11px;width:64%;background:#F0EDE6;border-radius:4px;"></div>
+      </div>
+    </div>
+
+    <!-- docked floating ball + expandable quick-menu (right edge) -->
+    <div style="position:absolute;right:18px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:12px;z-index:8;">
+      <sc-if value="{{ballOpen}}" hint-placeholder-val="{{ true }}">
+        <div style="width:198px;background:#fff;border:1px solid #E1DED6;border-radius:15px;box-shadow:0 18px 44px rgba(20,24,33,.22);padding:9px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 6px 9px;">
+            <span style="font-size:11px;font-weight:600;color:#8A8F98;">悬浮球形态</span>
+            <div style="display:flex;gap:2px;background:#F1EFEA;padding:2px;border-radius:7px;">
+              <span style="font-size:10.5px;font-weight:600;color:#fff;background:#2F5BD0;padding:3px 8px;border-radius:5px;">桌面</span>
+              <span style="font-size:10.5px;font-weight:500;color:#5B616B;padding:3px 8px;border-radius:5px;">手机</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 9px;border-radius:10px;background:#EBF0FC;cursor:pointer;">
+            <span style="width:26px;height:26px;flex:none;border-radius:8px;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">词</span>
+            <div style="display:flex;flex-direction:column;line-height:1.25;"><span style="font-size:13px;font-weight:600;color:#1B3A86;">划词翻译</span><span style="font-size:10.5px;color:#7E94C4;">选中即译</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px;border-radius:10px;cursor:pointer;">
+            <span style="width:26px;height:26px;flex:none;border-radius:8px;background:#F2EEE6;color:#8A7B5E;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">图</span>
+            <span style="font-size:13px;font-weight:500;color:#3A3F47;">截图翻译</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px;border-radius:10px;cursor:pointer;">
+            <span style="width:26px;height:26px;flex:none;border-radius:8px;background:#F2EEE6;color:#8A7B5E;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">页</span>
+            <span style="font-size:13px;font-weight:500;color:#3A3F47;">整页翻译</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px;border-radius:10px;cursor:pointer;">
+            <span style="width:26px;height:26px;flex:none;border-radius:8px;background:#F2EEE6;color:#8A7B5E;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">读</span>
+            <span style="font-size:13px;font-weight:500;color:#3A3F47;">朗读原文</span>
+          </div>
+          <div style="height:1px;background:#F0EDE6;margin:6px 8px;"></div>
+          <div onClick="{{openReader}}" style="display:flex;align-items:center;gap:10px;padding:9px;border-radius:10px;cursor:pointer;">
+            <span style="width:26px;height:26px;flex:none;border-radius:8px;background:#F2EEE6;color:#8A7B5E;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">阅</span>
+            <span style="font-size:13px;font-weight:500;color:#3A3F47;">打开阅读器</span>
+          </div>
+        </div>
+      </sc-if>
+      <div onClick="{{toggleBall}}" style="width:56px;height:56px;flex:none;border-radius:50%;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;letter-spacing:.5px;cursor:pointer;box-shadow:0 10px 26px rgba(47,91,208,.42);border:3px solid rgba(255,255,255,.85);">GT</div>
+    </div>
+
+    <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:12px;color:#8A857C;">桌面悬浮球 · 划词即翻 · 点小球展开 / 收起，PC 与手机通用</div>
+  </div>
+  </sc-if>
+
+  <!-- ============ MOBILE BOTTOM NAV ============ -->
+  <sc-if value="{{isMobile}}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;display:flex;border-top:1px solid #E6E3DD;background:#fff;">
+      <sc-for list="{{mobileNav}}" as="n" hint-placeholder-count="3"><button onClick="{{n.onClick}}" style="{{n.style}}"><span style="{{n.iconStyle}}">{{n.icon}}</span>{{n.label}}</button></sc-for>
+    </div>
+  </sc-if>
+
+  <!-- ============ ACCOUNT / BACKUP MODAL ============ -->
+  <sc-if value="{{accountOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:80;background:rgba(28,31,38,.34);display:flex;align-items:center;justify-content:center;padding:24px;">
+      <div style="width:420px;max-width:100%;background:#fff;border-radius:16px;box-shadow:0 30px 70px rgba(20,24,33,.32);overflow:hidden;">
+
+        <!-- signed-out : sign in -->
+        <sc-if value="{{notSignedIn}}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #F0EDE6;">
+            <span style="font-size:15px;font-weight:600;color:#1B1D22;">登录以备份与同步</span>
+            <span onClick="{{closeAccount}}" style="font-size:18px;color:#B0AAA0;cursor:pointer;line-height:1;">×</span>
+          </div>
+          <div style="padding:22px 20px 20px;">
+            <p style="margin:0 0 18px;font-size:13.5px;line-height:1.7;color:#5B616B;">登录个人 Microsoft 账户后，可将<strong style="color:#1B1D22;font-weight:600;">文献库、术语表与翻译记录</strong>备份到 OneDrive，并在其他设备一键恢复。</p>
+            <button onClick="{{doSignIn}}" style="width:100%;display:flex;align-items:center;justify-content:center;gap:11px;padding:13px;border:1px solid #D9D5CC;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;color:#2A2D33;">
+              <span style="display:grid;grid-template-columns:9px 9px;grid-template-rows:9px 9px;gap:2px;">
+                <span style="background:#8A8F98;"></span><span style="background:#8A8F98;"></span><span style="background:#8A8F98;"></span><span style="background:#8A8F98;"></span>
+              </span>
+              使用 Microsoft 账户登录
+            </button>
+            <div style="margin-top:14px;display:flex;align-items:flex-start;gap:7px;font-size:11.5px;line-height:1.6;color:#A8A39A;">
+              <span style="color:#2E9E6B;font-size:8px;margin-top:4px;">●</span>仅用于同步你自己的数据；可随时退出并停止同步。
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- signed-in : backup panel -->
+        <sc-if value="{{signedIn}}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #F0EDE6;">
+            <div style="display:flex;align-items:center;gap:11px;">
+              <span style="width:38px;height:38px;border-radius:50%;background:#2F5BD0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;">顾</span>
+              <div style="display:flex;flex-direction:column;line-height:1.3;">
+                <span style="font-size:14px;font-weight:600;color:#1B1D22;">顾先生</span>
+                <span style="font-size:11.5px;color:#9A958B;font-family:'IBM Plex Mono',monospace;">gx****@outlook.com</span>
+              </div>
+            </div>
+            <span onClick="{{closeAccount}}" style="font-size:18px;color:#B0AAA0;cursor:pointer;line-height:1;">×</span>
+          </div>
+          <div style="padding:18px 20px 20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#F3F6FD;border:1px solid #E1E9F8;border-radius:11px;margin-bottom:16px;">
+              <div style="display:flex;flex-direction:column;line-height:1.4;">
+                <span style="font-size:13px;font-weight:600;color:#1B3A86;">已连接 OneDrive</span>
+                <span style="font-size:11.5px;color:#7E94C4;">上次备份 · 今天 09:24</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:7px;">
+                <span style="font-size:11.5px;color:#3C5079;">自动同步</span>
+                <span style="width:34px;height:20px;border-radius:11px;background:#2F5BD0;position:relative;display:inline-block;"><span style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff;"></span></span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px;">
+              <button style="display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:10px;border:1px solid #2F5BD0;background:#2F5BD0;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;">立即备份到 OneDrive</button>
+              <div style="display:flex;gap:9px;">
+                <button style="flex:1;padding:10px;border-radius:10px;border:1px solid #E0DCD3;background:#fff;color:#3A3F47;font-size:13px;font-weight:500;cursor:pointer;">从备份恢复</button>
+                <button style="flex:1;padding:10px;border-radius:10px;border:1px solid #E0DCD3;background:#fff;color:#3A3F47;font-size:13px;font-weight:500;cursor:pointer;">导出备份 .gtbak</button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #F0EDE6;padding-top:13px;">
+              <span style="font-size:11.5px;color:#A8A39A;">备份含文献库 · 术语表 · 翻译记录</span>
+              <button onClick="{{doSignOut}}" style="font-size:12px;font-weight:500;color:#C2553F;background:none;border:none;cursor:pointer;padding:0;">退出登录</button>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ TERM TOOLTIP ============ -->
+  <sc-if value="{{tipVisible}}" hint-placeholder-val="{{ false }}">
+    <div style="{{tipStyle}}">
+      <div style="background:#fff;border:1px solid #E1DED6;border-radius:11px;box-shadow:0 12px 32px rgba(20,24,33,.18);padding:14px 15px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#2F5BD0;font-weight:500;">{{hv.en}}</span>
+          <span style="font-size:10px;font-weight:600;color:#8A8F98;background:#EEEBE4;padding:2px 6px;border-radius:5px;white-space:nowrap;">{{hv.domain}}</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:9px;">
+          <span style="font-size:18px;font-weight:600;color:#1B1D22;">{{hv.recommended}}</span>
+          <span style="font-size:9.5px;font-weight:700;color:#2E7D5B;background:#E6F2EC;padding:2px 6px;border-radius:5px;">推荐译法</span>
+        </div>
+        <div style="font-size:12.5px;line-height:1.65;color:#4A4F57;margin-bottom:10px;">{{hv.defn}}</div>
+        <div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid #F0EDE6;padding-top:9px;">
+          <div style="font-size:11.5px;color:#8A8F98;">常见译法 · <span style="color:#5B616B;">{{hvCommon}}</span></div>
+          <div style="font-size:11.5px;color:#8A8F98;">适用语境 · <span style="color:#5B616B;">{{hv.context}}</span></div>
+        </div>
+        <sc-if value="{{hv.note}}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:9px;font-size:11.5px;line-height:1.6;color:#9A6B1E;background:#FBF6EC;border:1px solid #EFE2C8;border-radius:7px;padding:7px 9px;">{{hv.note}}</div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;defaultLayout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A&quot;,&quot;B&quot;,&quot;C&quot;],&quot;default&quot;:&quot;A&quot;,&quot;tsType&quot;:&quot;'A'|'B'|'C'&quot;},&quot;defaultMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;academic&quot;,&quot;sentence&quot;,&quot;term&quot;,&quot;ocr&quot;,&quot;polish&quot;,&quot;normal&quot;],&quot;default&quot;:&quot;academic&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;readingScale&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:1,&quot;min&quot;:0.85,&quot;max&quot;:1.4,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;},&quot;termUnderline&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      layout: (props && props.defaultLayout) || 'A',
+      mode: (props && props.defaultMode) || 'academic',
+      activeDoc: 'd1',
+      sideTab: 'glossary',
+      hoveredTerm: null, tipX: 0, tipY: 0,
+      ballOpen: true,
+      accountOpen: false, signedIn: false,
+      viewportW: (typeof window !== 'undefined' ? window.innerWidth : 1200),
+      mobileTab: 'read'
+    };
+    this.onTermEnter = this.onTermEnter.bind(this);
+    this.onTermLeave = this.onTermLeave.bind(this);
+  }
+
+  TERMS = {
+    recurrent: { en: 'recurrent', zh: '循环', domain: 'CS / AI', defn: '按时间步顺序传递隐藏状态的网络结构（如 RNN、LSTM）。', common: ['循环', '递归'], recommended: '循环', context: '神经网络架构', note: '易与 recursive（递归）混淆，二者机制不同：recurrent 指时序循环，recursive 指结构递归。' },
+    ldep: { en: 'long-range dependencies', zh: '长距离依赖', domain: 'CS / AI', defn: '序列中相距较远的元素之间存在的语义或语法关联。', common: ['长距离依赖', '长程依赖'], recommended: '长距离依赖', context: '序列建模' },
+    token: { en: 'token', zh: '词元', domain: 'CS / AI', defn: '文本被切分后的最小处理单位，可为词、子词或字符。', common: ['词元', '标记', '令牌'], recommended: '词元', context: '自然语言处理', note: '编程语境下 token 多译“令牌”，本文为 NLP 语境，全文统一采用“词元”。' },
+    embed: { en: 'representations', zh: '表示', domain: 'CS / AI', defn: '模型为输入学习到的向量化特征。', common: ['表示', '表征'], recommended: '表示', context: '表示学习' },
+    selfattn: { en: 'self-attention', zh: '自注意力', domain: 'CS / AI', defn: '序列内部各元素相互计算注意力权重的机制，用于捕捉任意位置间的依赖。', common: ['自注意力', '内部注意力'], recommended: '自注意力', context: '深度学习 / 序列建模' },
+    bench: { en: 'machine-translation benchmarks', zh: '机器翻译基准', domain: 'CS / AI', defn: '用于评测机器翻译质量的标准数据集与指标（如 WMT、BLEU）。', common: ['机器翻译基准', '机器翻译评测集'], recommended: '机器翻译基准', context: '模型评测' },
+    biomarker: { en: 'biomarker', zh: '生物标志物', domain: '医学 / 生物', defn: '可客观测量并反映生理或病理状态的指标。', common: ['生物标志物', '生物标记物'], recommended: '生物标志物', context: '临床 / 分子生物' },
+    invitro: { en: 'in vitro', zh: '体外', domain: '医学 / 生物', defn: '在生物体外（如试管、培养皿）中进行的实验。', common: ['体外', '离体'], recommended: '体外', context: '实验方法', note: '对应 in vivo（体内）；二者常成对出现，注意区分。' },
+    apoptosis: { en: 'apoptosis', zh: '细胞凋亡', domain: '医学 / 生物', defn: '由基因调控的程序性细胞死亡过程。', common: ['凋亡', '细胞凋亡', '程序性死亡'], recommended: '细胞凋亡', context: '细胞生物学' },
+    calibration: { en: 'calibration', zh: '标定', domain: '工程 / 物理', defn: '通过已知标准对仪器测量值进行校正的过程。', common: ['标定', '校准', '校正'], recommended: '标定', context: '测量 / 仪器', note: 'calibration 在测量语境多译“标定 / 校准”，依设备与行业习惯而定。' },
+    linfit: { en: 'linear fit', zh: '线性拟合', domain: '工程 / 物理', defn: '用直线模型拟合数据点以描述其线性关系。', common: ['线性拟合', '线性回归拟合'], recommended: '线性拟合', context: '数据分析' }
+  };
+
+  DOCS = {
+    d1: {
+      title: 'Attention-Based Sequence Modeling', source: 'arXiv · cs.CL · 2024', type: 'pdf', domain: '计算机 / 人工智能', conf: 96, pages: 14,
+      terms: ['selfattn', 'token', 'recurrent', 'ldep', 'embed', 'bench'],
+      paras: [
+        { o: [{ t: 'Recent neural sequence models rely heavily on ' }, { t: 'recurrent', k: 'recurrent' }, { t: ' architectures to capture ' }, { t: 'long-range dependencies', k: 'ldep' }, { t: ' between ' }, { t: 'tokens', k: 'token' }, { t: '.' }],
+          z: [{ t: '近年来的神经序列模型在很大程度上依赖' }, { t: '循环', k: 'recurrent' }, { t: '结构来捕捉' }, { t: '词元', k: 'token' }, { t: '之间的' }, { t: '长距离依赖', k: 'ldep' }, { t: '关系。' }] },
+        { o: [{ t: 'We propose a network that dispenses with ' }, { t: 'recurrence', k: 'recurrent' }, { t: ' entirely and instead computes ' }, { t: 'representations', k: 'embed' }, { t: ' through a ' }, { t: 'self-attention', k: 'selfattn' }, { t: ' mechanism.' }],
+          z: [{ t: '本文提出一种完全摒弃' }, { t: '循环', k: 'recurrent' }, { t: '的网络，转而通过' }, { t: '自注意力', k: 'selfattn' }, { t: '机制来计算' }, { t: '表示', k: 'embed' }, { t: '。' }] },
+        { o: [{ t: 'Each ' }, { t: 'token', k: 'token' }, { t: ' attends to every other ' }, { t: 'token', k: 'token' }, { t: ' in the sequence, allowing the model to learn contextual relationships in parallel.' }],
+          z: [{ t: '序列中的每个' }, { t: '词元', k: 'token' }, { t: '都会关注其他所有' }, { t: '词元', k: 'token' }, { t: '，使模型能够并行地学习上下文关系。' }] },
+        { o: [{ t: 'On standard ' }, { t: 'machine-translation benchmarks', k: 'bench' }, { t: ', the approach attains competitive accuracy while substantially reducing training time.' }],
+          z: [{ t: '在标准的' }, { t: '机器翻译基准', k: 'bench' }, { t: '上，该方法在大幅缩短训练时间的同时，取得了具有竞争力的准确率。' }] }
+      ]
+    },
+    d2: {
+      title: 'A Novel Biomarker for Tumor Progression', source: 'Nature Communications · 2023', type: 'pdf', domain: '医学 / 生物', conf: 93, pages: 9,
+      terms: ['biomarker', 'invitro', 'apoptosis'],
+      paras: [
+        { o: [{ t: 'The ' }, { t: 'biomarker', k: 'biomarker' }, { t: ' exhibited elevated expression in tumor tissue compared with adjacent normal samples.' }],
+          z: [{ t: '与癌旁正常组织相比，该' }, { t: '生物标志物', k: 'biomarker' }, { t: '在肿瘤组织中呈现出升高的表达。' }] },
+        { o: [{ t: 'In vitro', k: 'invitro' }, { t: ' assays further confirmed that the compound induced ' }, { t: 'apoptosis', k: 'apoptosis' }, { t: ' in a dose-dependent manner.' }],
+          z: [{ t: '体外', k: 'invitro' }, { t: '实验进一步证实，该化合物以剂量依赖的方式诱导细胞' }, { t: '凋亡', k: 'apoptosis' }, { t: '。' }] }
+      ]
+    },
+    d3: {
+      title: 'Fig.3 截图 · 热成像系统标定', source: '图片 · PNG · 1920×1080', type: 'image', domain: '工程 / 物理', conf: 91, pages: 1,
+      terms: ['calibration', 'linfit'],
+      paras: [],
+      ocr: {
+        o: [{ t: 'Figure 3. ' }, { t: 'Calibration', k: 'calibration' }, { t: ' curve of the thermal imaging sensor across the operating temperature range. The dashed line denotes the ' }, { t: 'linear fit', k: 'linfit' }, { t: ' (R\u00b2 = 0.998).' }],
+        z: [{ t: '图 3. 热成像传感器在工作温度范围内的' }, { t: '标定', k: 'calibration' }, { t: '曲线。虚线表示' }, { t: '线性拟合', k: 'linfit' }, { t: '（R\u00b2 = 0.998）。' }]
+      }
+    }
+  };
+
+  LIBRARY = ['d1', 'd2', 'd3'];
+  PLACEHOLDERS = [
+    { title: 'On the Convergence of Gradient Methods', domain: '数学' },
+    { title: 'Structural Analysis of Composite Beams', domain: '工程 / 物理' }
+  ];
+
+  onTermEnter(e) {
+    const id = e.currentTarget.getAttribute('data-term');
+    if (!id) return;
+    this.setState({ hoveredTerm: id, tipX: e.clientX, tipY: e.clientY });
+  }
+  onTermLeave(e) {
+    const id = e.currentTarget.getAttribute('data-term');
+    if (!id) return;
+    this.setState(s => (s.hoveredTerm === id ? { hoveredTerm: null } : null));
+  }
+  setMode(m) { this.setState({ mode: m }); }
+  setDoc(id) {
+    const d = this.DOCS[id];
+    const patch = { activeDoc: id, hoveredTerm: null };
+    if (d && d.type === 'image') patch.mode = 'ocr';
+    else if (this.state.mode === 'ocr') patch.mode = 'academic';
+    this.setState(patch);
+  }
+  setSide(t) { this.setState({ sideTab: t }); }
+  setLayout(l) { this.setState({ layout: l }); }
+  setMobileTab(t) { this.setState({ mobileTab: t }); }
+  componentDidMount() { this._onResize = () => this.setState({ viewportW: window.innerWidth }); window.addEventListener('resize', this._onResize); }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+  navStyle(active) {
+    return { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px 0 7px', cursor: 'pointer', background: 'none', border: 'none', fontSize: '11px', fontWeight: active ? 600 : 500, color: active ? '#2F5BD0' : '#8A8F98' };
+  }
+  navIconStyle(active) {
+    return { width: '24px', height: '24px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600, background: active ? '#EBF0FC' : 'transparent', color: active ? '#2F5BD0' : '#A8A39A' };
+  }
+
+  segStyle(active) {
+    return active
+      ? { padding: '5px 12px', borderRadius: '7px', fontSize: '12.5px', fontWeight: 600, background: '#2F5BD0', color: '#fff', cursor: 'pointer', border: '1px solid #2F5BD0', whiteSpace: 'nowrap' }
+      : { padding: '5px 12px', borderRadius: '7px', fontSize: '12.5px', fontWeight: 500, background: 'transparent', color: '#5B616B', cursor: 'pointer', border: '1px solid transparent', whiteSpace: 'nowrap' };
+  }
+  modeStyle(active) {
+    return active
+      ? { padding: '6px 12px', borderRadius: '8px', fontSize: '12.5px', fontWeight: 600, background: '#fff', color: '#2F5BD0', border: '1px solid #2F5BD0', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 1px 2px rgba(47,91,208,.12)' }
+      : { padding: '6px 12px', borderRadius: '8px', fontSize: '12.5px', fontWeight: 500, background: 'transparent', color: '#5B616B', border: '1px solid #E0DCD3', cursor: 'pointer', whiteSpace: 'nowrap' };
+  }
+  docCardStyle(active) {
+    const base = { padding: '11px 12px', borderRadius: '9px', marginBottom: '6px', cursor: 'pointer', border: '1px solid', transition: 'all .12s' };
+    return active
+      ? { ...base, background: '#fff', borderColor: '#CBD8F5', boxShadow: '0 2px 8px rgba(31,45,80,.06)' }
+      : { ...base, background: 'transparent', borderColor: 'transparent' };
+  }
+  typeBadgeStyle(type) {
+    const base = { fontSize: '9.5px', fontWeight: 700, letterSpacing: '.4px', padding: '2px 5px', borderRadius: '4px' };
+    if (type === 'image') return { ...base, background: '#F6EBD4', color: '#9A6B1E' };
+    if (type === 'pdf') return { ...base, background: '#E4ECFB', color: '#2F5BD0' };
+    return { ...base, background: '#ECEAE4', color: '#6B7078' };
+  }
+  tabStyle(active) {
+    const base = { flex: 1, padding: '11px 4px', fontSize: '12.5px', background: 'transparent', cursor: 'pointer', border: 'none' };
+    return active
+      ? { ...base, fontWeight: 600, color: '#1B1D22', borderBottom: '2px solid #2F5BD0' }
+      : { ...base, fontWeight: 500, color: '#8A8F98', borderBottom: '2px solid transparent' };
+  }
+
+  buildSegs(arr, kind) {
+    const underline = this.props.termUnderline !== false;
+    const hov = this.state.hoveredTerm;
+    return (arr || []).map((s, i) => {
+      const isTerm = !!s.k;
+      let style = {};
+      if (isTerm) {
+        const active = s.k === hov;
+        style = {
+          cursor: 'help', borderRadius: '2px', padding: '0 1px', transition: 'background .12s', color: '#1B1D22',
+          borderBottom: underline ? (kind === 'o' ? '1.5px dotted #2F5BD0' : '1.5px dotted #B07D2A') : '1px solid transparent',
+          background: active ? (kind === 'o' ? '#E4ECFB' : '#F6EBD4') : 'transparent'
+        };
+      }
+      return { text: s.t, isTerm, termId: s.k || '', style, key: i };
+    });
+  }
+
+  renderVals() {
+    const S = this.state, P = this.props || {};
+    const isMobile = S.viewportW <= 760;
+    const isDesktop = !isMobile;
+    const mtab = S.mobileTab;
+    const libPanelStyle = isMobile
+      ? { width: '100%', flex: 1, minHeight: 0, background: '#FBFAF8', display: mtab === 'lib' ? 'flex' : 'none', flexDirection: 'column' }
+      : { width: '288px', flex: 'none', borderRight: '1px solid #E6E3DD', background: '#FBFAF8', display: 'flex', flexDirection: 'column' };
+    const centerPanelStyle = isMobile
+      ? { flex: 1, minWidth: 0, display: mtab === 'read' ? 'flex' : 'none', flexDirection: 'column', background: '#FFFFFF' }
+      : { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: '#FFFFFF' };
+    const sidePanelStyle = isMobile
+      ? { width: '100%', flex: 1, minHeight: 0, background: '#FBFAF8', display: mtab === 'terms' ? 'flex' : 'none', flexDirection: 'column' }
+      : { width: '336px', flex: 'none', borderLeft: '1px solid #E6E3DD', background: '#FBFAF8', display: 'flex', flexDirection: 'column' };
+    const navDefs = [{ id: 'lib', label: '文献', icon: '库' }, { id: 'read', label: '阅读', icon: '文' }, { id: 'terms', label: '术语', icon: '词' }];
+    const mobileNav = navDefs.map(n => ({ id: n.id, label: n.label, icon: n.icon, onClick: () => this.setMobileTab(n.id), style: this.navStyle(mtab === n.id), iconStyle: this.navIconStyle(mtab === n.id) }));
+    const scale = P.readingScale || 1;
+    const readingFont = (17 * scale).toFixed(1) + 'px';
+    const serif = "'IBM Plex Serif','Noto Serif SC',Georgia,serif";
+
+    const layoutDefs = [{ id: 'A', label: '三栏阅读' }, { id: 'B', label: '双栏对照' }, { id: 'C', label: '划词悬浮窗' }];
+    const layouts = layoutDefs.map(l => ({ id: l.id, label: l.label, onClick: () => this.setLayout(l.id), style: this.segStyle(S.layout === l.id) }));
+
+    const modeDefs = [{ id: 'academic', label: '学术翻译' }, { id: 'sentence', label: '逐句对照' }, { id: 'term', label: '术语解释' }, { id: 'ocr', label: '图片 OCR' }, { id: 'polish', label: '润色' }, { id: 'normal', label: '普通' }];
+    const modes = modeDefs.map(m => ({ id: m.id, label: m.label, onClick: () => this.setMode(m.id), style: this.modeStyle(S.mode === m.id) }));
+
+    const docs = this.LIBRARY.map(id => {
+      const d = this.DOCS[id]; const act = S.activeDoc === id;
+      return { id, title: d.title, source: d.source, domain: d.domain, type: d.type, typeLabel: d.type === 'image' ? 'IMG' : (d.type === 'pdf' ? 'PDF' : 'TXT'), onClick: () => this.setDoc(id), cardStyle: this.docCardStyle(act), badgeStyle: this.typeBadgeStyle(d.type) };
+    });
+    const placeholders = this.PLACEHOLDERS.map(p => ({ title: p.title, domain: p.domain }));
+
+    const doc = this.DOCS[S.activeDoc];
+    const mode = S.mode;
+    const showSentence = mode === 'sentence';
+    const showOcr = mode === 'ocr';
+    const showFlow = (mode === 'academic' || mode === 'term' || mode === 'polish' || mode === 'normal');
+    const bannerMap = {
+      academic: '学术翻译模式 · 结合学科背景与全文逻辑，保持全文术语统一',
+      term: '术语解释模式 · 已标注专业词汇，右侧可查看统一译名、释义与歧义',
+      polish: '润色模式 · 在忠实原意的基础上优化中文表达的流畅度',
+      normal: '普通模式 · 通用直译，速度优先'
+    };
+    const bannerText = bannerMap[mode] || '';
+    const bannerVisible = showFlow && !!bannerText;
+
+    const paras = (doc.paras || []).map((p, i) => ({ oSegs: this.buildSegs(p.o, 'o'), zhSegs: this.buildSegs(p.z, 'z'), key: i }));
+
+    const hasOcr = doc.type === 'image' && !!doc.ocr;
+    const ocrSegsO = hasOcr ? this.buildSegs(doc.ocr.o, 'o') : [];
+    const ocrSegsZ = hasOcr ? this.buildSegs(doc.ocr.z, 'z') : [];
+    const showOcrResult = showOcr && hasOcr;
+    const showDrop = showOcr && !hasOcr;
+
+    const usedTerms = doc.terms.map(id => ({ id, ...this.TERMS[id] }));
+    const ambig = usedTerms.filter(t => t.note);
+    const sideDefs = [{ id: 'glossary', label: '术语表', n: usedTerms.length }, { id: 'explain', label: '词汇解释', n: usedTerms.length }, { id: 'ambig', label: '歧义说明', n: ambig.length }];
+    const sideTabs = sideDefs.map(t => ({ id: t.id, label: t.label, n: t.n, onClick: () => this.setSide(t.id), style: this.tabStyle(S.sideTab === t.id) }));
+    const glossary = usedTerms.map(t => ({ ...t, commonStr: t.common.join(' / ') }));
+
+    const hv = S.hoveredTerm ? this.TERMS[S.hoveredTerm] : null;
+    let tipStyle = { display: 'none' };
+    if (hv) {
+      const w = (typeof window !== 'undefined' ? window.innerWidth : 1200);
+      const left = Math.min(S.tipX + 16, w - 322);
+      tipStyle = { position: 'fixed', left: left + 'px', top: (S.tipY + 18) + 'px', zIndex: 60, width: '300px' };
+    }
+
+    return {
+      readingFont,
+      layouts, modes, docs, placeholders,
+      docTitle: doc.title, docSource: doc.source, domainText: doc.domain, conf: doc.conf + '%',
+      showSentence, showFlow, showOcr, showOcrResult, showDrop,
+      bannerText, bannerVisible, paras, ocrSegsO, ocrSegsZ,
+      sideTabs, glossary, explanations: usedTerms, ambiguities: ambig, glossChips: glossary,
+      showGloss: S.sideTab === 'glossary', showExplain: S.sideTab === 'explain', showAmbig: S.sideTab === 'ambig', noAmbig: ambig.length === 0,
+      onTermEnter: this.onTermEnter, onTermLeave: this.onTermLeave,
+      hv, hvCommon: hv ? hv.common.join(' / ') : '', tipStyle, tipVisible: !!hv,
+      openReader: () => this.setLayout('A'),
+      ballOpen: S.ballOpen,
+      toggleBall: () => this.setState(s => ({ ballOpen: !s.ballOpen })),
+      accountOpen: S.accountOpen, signedIn: S.signedIn, notSignedIn: !S.signedIn,
+      toggleAccount: () => this.setState(s => ({ accountOpen: !s.accountOpen })),
+      closeAccount: () => this.setState({ accountOpen: false }),
+      doSignIn: () => this.setState({ signedIn: true }),
+      doSignOut: () => this.setState({ signedIn: false }),
+      isMobile, isDesktop, libPanelStyle, centerPanelStyle, sidePanelStyle, mobileNav,
+      isB: S.layout === 'B' && !isMobile, isC: S.layout === 'C' && !isMobile,
+      isA: !(S.layout === 'B' && !isMobile) && !(S.layout === 'C' && !isMobile),
+      pStyle: { fontFamily: serif, fontSize: readingFont, lineHeight: '1.95', color: '#23262C', margin: '0 0 20px', textWrap: 'pretty' },
+      sOrigStyle: { fontFamily: serif, fontSize: readingFont, lineHeight: '1.7', color: '#3A3F47', marginBottom: '10px' },
+      sZhStyle: { fontFamily: serif, fontSize: readingFont, lineHeight: '1.85', color: '#1B1D22', flex: 1 },
+      bOrigStyle: { fontFamily: serif, fontSize: readingFont, lineHeight: '1.9', color: '#3A3F47', margin: '0 0 18px', textWrap: 'pretty' }
+    };
+  }
+}
+</script>
+</body>
+</html>
