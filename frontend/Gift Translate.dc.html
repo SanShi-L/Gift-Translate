@@ -67,7 +67,7 @@
       <div style="padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:14px;font-weight:600;color:#1B1D22;">文献库</span>
-          <span style="font-size:11px;font-weight:600;color:#8A8F98;background:#EEEBE4;padding:1px 7px;border-radius:9px;">5</span>
+          <span style="font-size:11px;font-weight:600;color:#8A8F98;background:#EEEBE4;padding:1px 7px;border-radius:9px;">{{libraryCount}}</span>
         </div>
         <button style="font-size:12px;font-weight:500;color:#2F5BD0;background:#E9EFFB;border:none;padding:5px 10px;border-radius:7px;cursor:pointer;">+ 导入</button>
       </div>
@@ -483,6 +483,7 @@ class Component extends DCLogic {
       hoveredTerm: null, tipX: 0, tipY: 0,
       ballOpen: true,
       accountOpen: false, signedIn: false,
+      loading: true, loadError: '',
       viewportW: (typeof window !== 'undefined' ? window.innerWidth : 1200),
       mobileTab: 'read'
     };
@@ -490,61 +491,52 @@ class Component extends DCLogic {
     this.onTermLeave = this.onTermLeave.bind(this);
   }
 
-  TERMS = {
-    recurrent: { en: 'recurrent', zh: '循环', domain: 'CS / AI', defn: '按时间步顺序传递隐藏状态的网络结构（如 RNN、LSTM）。', common: ['循环', '递归'], recommended: '循环', context: '神经网络架构', note: '易与 recursive（递归）混淆，二者机制不同：recurrent 指时序循环，recursive 指结构递归。' },
-    ldep: { en: 'long-range dependencies', zh: '长距离依赖', domain: 'CS / AI', defn: '序列中相距较远的元素之间存在的语义或语法关联。', common: ['长距离依赖', '长程依赖'], recommended: '长距离依赖', context: '序列建模' },
-    token: { en: 'token', zh: '词元', domain: 'CS / AI', defn: '文本被切分后的最小处理单位，可为词、子词或字符。', common: ['词元', '标记', '令牌'], recommended: '词元', context: '自然语言处理', note: '编程语境下 token 多译“令牌”，本文为 NLP 语境，全文统一采用“词元”。' },
-    embed: { en: 'representations', zh: '表示', domain: 'CS / AI', defn: '模型为输入学习到的向量化特征。', common: ['表示', '表征'], recommended: '表示', context: '表示学习' },
-    selfattn: { en: 'self-attention', zh: '自注意力', domain: 'CS / AI', defn: '序列内部各元素相互计算注意力权重的机制，用于捕捉任意位置间的依赖。', common: ['自注意力', '内部注意力'], recommended: '自注意力', context: '深度学习 / 序列建模' },
-    bench: { en: 'machine-translation benchmarks', zh: '机器翻译基准', domain: 'CS / AI', defn: '用于评测机器翻译质量的标准数据集与指标（如 WMT、BLEU）。', common: ['机器翻译基准', '机器翻译评测集'], recommended: '机器翻译基准', context: '模型评测' },
-    biomarker: { en: 'biomarker', zh: '生物标志物', domain: '医学 / 生物', defn: '可客观测量并反映生理或病理状态的指标。', common: ['生物标志物', '生物标记物'], recommended: '生物标志物', context: '临床 / 分子生物' },
-    invitro: { en: 'in vitro', zh: '体外', domain: '医学 / 生物', defn: '在生物体外（如试管、培养皿）中进行的实验。', common: ['体外', '离体'], recommended: '体外', context: '实验方法', note: '对应 in vivo（体内）；二者常成对出现，注意区分。' },
-    apoptosis: { en: 'apoptosis', zh: '细胞凋亡', domain: '医学 / 生物', defn: '由基因调控的程序性细胞死亡过程。', common: ['凋亡', '细胞凋亡', '程序性死亡'], recommended: '细胞凋亡', context: '细胞生物学' },
-    calibration: { en: 'calibration', zh: '标定', domain: '工程 / 物理', defn: '通过已知标准对仪器测量值进行校正的过程。', common: ['标定', '校准', '校正'], recommended: '标定', context: '测量 / 仪器', note: 'calibration 在测量语境多译“标定 / 校准”，依设备与行业习惯而定。' },
-    linfit: { en: 'linear fit', zh: '线性拟合', domain: '工程 / 物理', defn: '用直线模型拟合数据点以描述其线性关系。', common: ['线性拟合', '线性回归拟合'], recommended: '线性拟合', context: '数据分析' }
-  };
+  TERMS = {};
+  DOCS = {};
+  LIBRARY = [];
+  PLACEHOLDERS = [];
 
-  DOCS = {
-    d1: {
-      title: 'Attention-Based Sequence Modeling', source: 'arXiv · cs.CL · 2024', type: 'pdf', domain: '计算机 / 人工智能', conf: 96, pages: 14,
-      terms: ['selfattn', 'token', 'recurrent', 'ldep', 'embed', 'bench'],
-      paras: [
-        { o: [{ t: 'Recent neural sequence models rely heavily on ' }, { t: 'recurrent', k: 'recurrent' }, { t: ' architectures to capture ' }, { t: 'long-range dependencies', k: 'ldep' }, { t: ' between ' }, { t: 'tokens', k: 'token' }, { t: '.' }],
-          z: [{ t: '近年来的神经序列模型在很大程度上依赖' }, { t: '循环', k: 'recurrent' }, { t: '结构来捕捉' }, { t: '词元', k: 'token' }, { t: '之间的' }, { t: '长距离依赖', k: 'ldep' }, { t: '关系。' }] },
-        { o: [{ t: 'We propose a network that dispenses with ' }, { t: 'recurrence', k: 'recurrent' }, { t: ' entirely and instead computes ' }, { t: 'representations', k: 'embed' }, { t: ' through a ' }, { t: 'self-attention', k: 'selfattn' }, { t: ' mechanism.' }],
-          z: [{ t: '本文提出一种完全摒弃' }, { t: '循环', k: 'recurrent' }, { t: '的网络，转而通过' }, { t: '自注意力', k: 'selfattn' }, { t: '机制来计算' }, { t: '表示', k: 'embed' }, { t: '。' }] },
-        { o: [{ t: 'Each ' }, { t: 'token', k: 'token' }, { t: ' attends to every other ' }, { t: 'token', k: 'token' }, { t: ' in the sequence, allowing the model to learn contextual relationships in parallel.' }],
-          z: [{ t: '序列中的每个' }, { t: '词元', k: 'token' }, { t: '都会关注其他所有' }, { t: '词元', k: 'token' }, { t: '，使模型能够并行地学习上下文关系。' }] },
-        { o: [{ t: 'On standard ' }, { t: 'machine-translation benchmarks', k: 'bench' }, { t: ', the approach attains competitive accuracy while substantially reducing training time.' }],
-          z: [{ t: '在标准的' }, { t: '机器翻译基准', k: 'bench' }, { t: '上，该方法在大幅缩短训练时间的同时，取得了具有竞争力的准确率。' }] }
-      ]
-    },
-    d2: {
-      title: 'A Novel Biomarker for Tumor Progression', source: 'Nature Communications · 2023', type: 'pdf', domain: '医学 / 生物', conf: 93, pages: 9,
-      terms: ['biomarker', 'invitro', 'apoptosis'],
-      paras: [
-        { o: [{ t: 'The ' }, { t: 'biomarker', k: 'biomarker' }, { t: ' exhibited elevated expression in tumor tissue compared with adjacent normal samples.' }],
-          z: [{ t: '与癌旁正常组织相比，该' }, { t: '生物标志物', k: 'biomarker' }, { t: '在肿瘤组织中呈现出升高的表达。' }] },
-        { o: [{ t: 'In vitro', k: 'invitro' }, { t: ' assays further confirmed that the compound induced ' }, { t: 'apoptosis', k: 'apoptosis' }, { t: ' in a dose-dependent manner.' }],
-          z: [{ t: '体外', k: 'invitro' }, { t: '实验进一步证实，该化合物以剂量依赖的方式诱导细胞' }, { t: '凋亡', k: 'apoptosis' }, { t: '。' }] }
-      ]
-    },
-    d3: {
-      title: 'Fig.3 截图 · 热成像系统标定', source: '图片 · PNG · 1920×1080', type: 'image', domain: '工程 / 物理', conf: 91, pages: 1,
-      terms: ['calibration', 'linfit'],
-      paras: [],
-      ocr: {
-        o: [{ t: 'Figure 3. ' }, { t: 'Calibration', k: 'calibration' }, { t: ' curve of the thermal imaging sensor across the operating temperature range. The dashed line denotes the ' }, { t: 'linear fit', k: 'linfit' }, { t: ' (R\u00b2 = 0.998).' }],
-        z: [{ t: '图 3. 热成像传感器在工作温度范围内的' }, { t: '标定', k: 'calibration' }, { t: '曲线。虚线表示' }, { t: '线性拟合', k: 'linfit' }, { t: '（R\u00b2 = 0.998）。' }]
-      }
-    }
-  };
+  loadBootstrap() {
+    fetch('/api/bootstrap')
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(data => {
+        this.TERMS = data.terms || {};
+        this.DOCS = data.docs || {};
+        this.LIBRARY = data.library || Object.keys(this.DOCS);
+        this.PLACEHOLDERS = data.placeholders || [];
 
-  LIBRARY = ['d1', 'd2', 'd3'];
-  PLACEHOLDERS = [
-    { title: 'On the Convergence of Gradient Methods', domain: '数学' },
-    { title: 'Structural Analysis of Composite Beams', domain: '工程 / 物理' }
-  ];
+        const firstDoc = this.LIBRARY[0] || Object.keys(this.DOCS)[0] || '';
+        this.setState(s => ({
+          activeDoc: this.DOCS[s.activeDoc] ? s.activeDoc : firstDoc,
+          loading: false,
+          loadError: '',
+          signedIn: !!(data.session && data.session.signedIn)
+        }));
+      })
+      .catch(err => {
+        this.setState({
+          loading: false,
+          loadError: '后端连接失败：' + (err && err.message ? err.message : String(err))
+        });
+      });
+  }
+
+  updateSession(signedIn) {
+    fetch('/api/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signedIn })
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(data => this.setState({ signedIn: !!data.signedIn, accountOpen: false }))
+      .catch(() => this.setState({ signedIn, accountOpen: false }));
+  }
 
   onTermEnter(e) {
     const id = e.currentTarget.getAttribute('data-term');
@@ -559,6 +551,7 @@ class Component extends DCLogic {
   setMode(m) { this.setState({ mode: m }); }
   setDoc(id) {
     const d = this.DOCS[id];
+    if (!d) return;
     const patch = { activeDoc: id, hoveredTerm: null };
     if (d && d.type === 'image') patch.mode = 'ocr';
     else if (this.state.mode === 'ocr') patch.mode = 'academic';
@@ -567,7 +560,11 @@ class Component extends DCLogic {
   setSide(t) { this.setState({ sideTab: t }); }
   setLayout(l) { this.setState({ layout: l }); }
   setMobileTab(t) { this.setState({ mobileTab: t }); }
-  componentDidMount() { this._onResize = () => this.setState({ viewportW: window.innerWidth }); window.addEventListener('resize', this._onResize); }
+  componentDidMount() {
+    this._onResize = () => this.setState({ viewportW: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+    this.loadBootstrap();
+  }
   componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
   navStyle(active) {
     return { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px 0 7px', cursor: 'pointer', background: 'none', border: 'none', fontSize: '11px', fontWeight: active ? 600 : 500, color: active ? '#2F5BD0' : '#8A8F98' };
@@ -651,11 +648,20 @@ class Component extends DCLogic {
 
     const docs = this.LIBRARY.map(id => {
       const d = this.DOCS[id]; const act = S.activeDoc === id;
+      if (!d) return null;
       return { id, title: d.title, source: d.source, domain: d.domain, type: d.type, typeLabel: d.type === 'image' ? 'IMG' : (d.type === 'pdf' ? 'PDF' : 'TXT'), onClick: () => this.setDoc(id), cardStyle: this.docCardStyle(act), badgeStyle: this.typeBadgeStyle(d.type) };
-    });
+    }).filter(Boolean);
     const placeholders = this.PLACEHOLDERS.map(p => ({ title: p.title, domain: p.domain }));
 
-    const doc = this.DOCS[S.activeDoc];
+    const doc = this.DOCS[S.activeDoc] || this.DOCS[this.LIBRARY[0]] || {
+      title: S.loading ? '正在连接后端...' : '暂无文献',
+      source: S.loadError || '请先启动后端服务',
+      type: 'pdf',
+      domain: S.loading ? '加载中' : '未连接',
+      conf: 0,
+      terms: [],
+      paras: []
+    };
     const mode = S.mode;
     const showSentence = mode === 'sentence';
     const showOcr = mode === 'ocr';
@@ -677,13 +683,13 @@ class Component extends DCLogic {
     const showOcrResult = showOcr && hasOcr;
     const showDrop = showOcr && !hasOcr;
 
-    const usedTerms = doc.terms.map(id => ({ id, ...this.TERMS[id] }));
+    const usedTerms = (doc.terms || []).map(id => this.TERMS[id] ? ({ id, ...this.TERMS[id] }) : null).filter(Boolean);
     const ambig = usedTerms.filter(t => t.note);
     const sideDefs = [{ id: 'glossary', label: '术语表', n: usedTerms.length }, { id: 'explain', label: '词汇解释', n: usedTerms.length }, { id: 'ambig', label: '歧义说明', n: ambig.length }];
     const sideTabs = sideDefs.map(t => ({ id: t.id, label: t.label, n: t.n, onClick: () => this.setSide(t.id), style: this.tabStyle(S.sideTab === t.id) }));
     const glossary = usedTerms.map(t => ({ ...t, commonStr: t.common.join(' / ') }));
 
-    const hv = S.hoveredTerm ? this.TERMS[S.hoveredTerm] : null;
+    const hv = S.hoveredTerm && this.TERMS[S.hoveredTerm] ? this.TERMS[S.hoveredTerm] : null;
     let tipStyle = { display: 'none' };
     if (hv) {
       const w = (typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -693,6 +699,7 @@ class Component extends DCLogic {
 
     return {
       readingFont,
+      libraryCount: docs.length + placeholders.length,
       layouts, modes, docs, placeholders,
       docTitle: doc.title, docSource: doc.source, domainText: doc.domain, conf: doc.conf + '%',
       showSentence, showFlow, showOcr, showOcrResult, showDrop,
@@ -707,8 +714,8 @@ class Component extends DCLogic {
       accountOpen: S.accountOpen, signedIn: S.signedIn, notSignedIn: !S.signedIn,
       toggleAccount: () => this.setState(s => ({ accountOpen: !s.accountOpen })),
       closeAccount: () => this.setState({ accountOpen: false }),
-      doSignIn: () => this.setState({ signedIn: true }),
-      doSignOut: () => this.setState({ signedIn: false }),
+      doSignIn: () => this.updateSession(true),
+      doSignOut: () => this.updateSession(false),
       isMobile, isDesktop, libPanelStyle, centerPanelStyle, sidePanelStyle, mobileNav,
       isB: S.layout === 'B' && !isMobile, isC: S.layout === 'C' && !isMobile,
       isA: !(S.layout === 'B' && !isMobile) && !(S.layout === 'C' && !isMobile),
