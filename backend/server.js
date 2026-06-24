@@ -7,9 +7,39 @@ const { URL } = require("url");
 
 const data = require("./data");
 
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return;
+
+  const lines = fs.readFileSync(filePath, "utf8").split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const eq = trimmed.indexOf("=");
+    if (eq <= 0) continue;
+
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
+const rootDir = path.resolve(__dirname, "..");
+loadEnvFile(path.join(rootDir, ".env"));
+
 const host = process.env.HOST || "127.0.0.1";
 const port = Number(process.env.PORT || 3000);
-const frontendDir = path.resolve(__dirname, "..", "frontend");
+const frontendDir = path.join(rootDir, "frontend");
+const oxfordConfig = {
+  appId: process.env.OXFORD_APP_ID || "",
+  appKey: process.env.OXFORD_APP_KEY || "",
+  baseUrl: process.env.OXFORD_BASE_URL || "https://od-api.oxforddictionaries.com/api/v2",
+  language: process.env.OXFORD_LANGUAGE || "en-us"
+};
 
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",
@@ -100,7 +130,7 @@ function termSearchFields(term) {
   ].map(normalizeSearchText).filter(Boolean);
 }
 
-function lookupTerms(query) {
+function lookupLocalTerms(query) {
   const q = normalizeSearchText(query);
   if (!q) return [];
 
@@ -123,6 +153,153 @@ function lookupTerms(query) {
     .filter(Boolean)
     .sort((a, b) => b.score - a.score || a.en.localeCompare(b.en))
     .slice(0, 8);
+}
+
+function isOxfordConfigured() {
+  return Boolean(oxfordConfig.appId && oxfordConfig.appKey);
+}
+
+function hasLatinText(value) {
+  return /[A-Za-z]/.test(String(value || ""));
+}
+
+function collectOxfordSenses(senses, out = []) {
+  for (const sense of senses || []) {
+    out.push(sense);
+    collectOxfordSenses(sense.subsenses, out);
+  }
+
+  return out;
+}
+
+function firstOxfordPronunciation(entry) {
+  const pronunciations = entry && Array.isArray(entry.pronunciations) ? entry.pronunciations : [];
+  return pronunciations.find((item) => item.phoneticSpelling || item.audioFile) || null;
+}
+
+function parseOxfordEntries(payload, query) {
+  const entries = [];
+
+  for (const result of payload.results || []) {
+    for (const lexicalEntry of result.lexicalEntries || []) {
+      const lexicalCategory = lexicalEntry.lexicalCategory && (lexicalEntry.lexicalCategory.text || lexicalEntry.lexicalCategory.id) || "";
+      const headword = lexicalEntry.text || result.word || result.id || query;
+
+      for (const entry of lexicalEntry.entries || []) {
+        const pronunciation = firstOxfordPronunciation(entry);
+        const phonetic = pronunciation && pronunciation.phoneticSpelling || "";
+        const audioFile = pronunciation && pronunciation.audioFile || "";
+        const etymology = Array.isArray(entry.etymologies) ? entry.etymologies[0] : "";
+
+        for (const sense of collectOxfordSenses(entry.senses)) {
+          const definition = sense.definitions && sense.definitions[0] || sense.shortDefinitions && sense.shortDefinitions[0];
+          if (!definition) continue;
+
+          const example = sense.examples && sense.examples[0] && sense.examples[0].text || "";
+          entries.push({
+            id: `oxford:${normalizeSearchText(headword)}:${entries.length}`,
+            en: headword,
+            zh: definition,
+            domain: lexicalCategory ? `Oxford · ${lexicalCategory}` : "Oxford",
+            defn: example ? `例句：${example}` : "Oxford Dictionaries",
+            common: [phonetic ? `/${phonetic}/` : "", example].filter(Boolean),
+            commonStr: [phonetic ? `/${phonetic}/` : "", example].filter(Boolean).join(" / "),
+            recommended: headword,
+            context: [phonetic ? `/${phonetic}/` : "", oxfordConfig.language].filter(Boolean).join(" · ") || "Oxford Dictionaries",
+            note: etymology || "",
+            source: "oxford",
+            sourceLabel: "Oxford",
+            lexicalCategory,
+            phoneticSpelling: phonetic,
+            audioFile,
+            example,
+            score: 4
+          });
+
+          if (entries.length >= 8) return entries;
+        }
+      }
+    }
+  }
+
+  return entries;
+}
+
+async function fetchWithTimeout(url, options, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function lookupOxfordTerms(query) {
+  const q = String(query || "").trim();
+  if (!isOxfordConfigured() || !hasLatinText(q)) return { results: [], skipped: true };
+
+  const wordId = encodeURIComponent(q.toLowerCase());
+  const endpoint = `${oxfordConfig.baseUrl.replace(/\/$/, "")}/entries/${encodeURIComponent(oxfordConfig.language)}/${wordId}`;
+  const response = await fetchWithTimeout(endpoint, {
+    headers: {
+      app_id: oxfordConfig.appId,
+      app_key: oxfordConfig.appKey
+    }
+  });
+
+  if (response.status === 404) return { results: [] };
+  if (!response.ok) {
+    throw new Error(`Oxford API returned HTTP ${response.status}`);
+  }
+
+  return {
+    results: parseOxfordEntries(await response.json(), q)
+  };
+}
+
+async function lookupTerms(query) {
+  const localResults = lookupLocalTerms(query);
+
+  if (!isOxfordConfigured()) {
+    return {
+      provider: "local",
+      providerConfigured: false,
+      fallbackUsed: true,
+      message: "未配置牛津 API，已使用本地词库结果",
+      results: localResults
+    };
+  }
+
+  try {
+    const oxford = await lookupOxfordTerms(query);
+    if (oxford.results.length) {
+      return {
+        provider: "oxford",
+        providerConfigured: true,
+        fallbackUsed: false,
+        message: "",
+        results: oxford.results
+      };
+    }
+
+    return {
+      provider: "oxford",
+      providerConfigured: true,
+      fallbackUsed: localResults.length > 0,
+      message: localResults.length ? "牛津未返回匹配项，已显示本地词库结果" : "牛津词典未找到匹配项",
+      results: localResults
+    };
+  } catch (error) {
+    return {
+      provider: "local",
+      providerConfigured: true,
+      fallbackUsed: true,
+      message: localResults.length ? "牛津接口暂不可用，已使用本地词库结果" : "牛津接口暂不可用",
+      results: localResults
+    };
+  }
 }
 
 async function handleApi(req, res, url) {
@@ -170,9 +347,10 @@ async function handleApi(req, res, url) {
 
   if (url.pathname === "/api/lookup" && req.method === "GET") {
     const query = url.searchParams.get("q") || "";
+    const lookup = await lookupTerms(query);
     sendJson(res, 200, {
       query,
-      results: lookupTerms(query)
+      ...lookup
     });
     return true;
   }
