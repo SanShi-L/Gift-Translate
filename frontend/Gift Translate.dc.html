@@ -73,10 +73,40 @@
       </div>
       <div style="padding:0 14px 10px;">
         <div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:#fff;border:1px solid #E6E3DD;border-radius:8px;font-size:12.5px;color:#A8A39A;">
-          <span style="font-size:13px;">⌕</span>搜索文献 / 术语
+          <span style="font-size:13px;">⌕</span>
+          <input value="{{lookupQuery}}" onInput="{{onLookupInput}}" placeholder="输入英文 / 中文术语" style="{{lookupInputStyle}}">
         </div>
       </div>
       <div style="flex:1;overflow:auto;padding:2px 10px 16px;">
+        <sc-if value="{{lookupVisible}}" hint-placeholder-val="{{ false }}">
+          <div style="margin:0 0 12px;padding:11px 12px;background:#FFFFFF;border:1px solid #E2E8F6;border-radius:9px;box-shadow:0 2px 8px rgba(31,45,80,.04);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-size:11px;font-weight:700;color:#2F5BD0;letter-spacing:.5px;">查词结果</span>
+              <button onClick="{{clearLookup}}" style="border:none;background:transparent;color:#9A958B;font-size:11.5px;cursor:pointer;padding:0;">清空</button>
+            </div>
+            <sc-if value="{{lookupLoading}}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12px;color:#8A8F98;line-height:1.6;padding:4px 0;">正在查询...</div>
+            </sc-if>
+            <sc-if value="{{lookupHasResults}}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{lookupResults}}" as="item" hint-placeholder-count="3">
+                <div onClick="{{item.onClick}}" style="{{item.style}}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#2F5BD0;font-weight:600;">{{item.en}}</span>
+                    <span style="font-size:10px;font-weight:600;color:#8A8F98;background:#EEEBE4;padding:2px 6px;border-radius:5px;white-space:nowrap;">{{item.domain}}</span>
+                  </div>
+                  <div style="font-size:15px;font-weight:600;color:#1B1D22;margin-bottom:4px;">{{item.zh}}</div>
+                  <div style="font-size:11.5px;color:#6B7078;line-height:1.55;">{{item.defn}}</div>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{lookupEmpty}}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12px;color:#9A958B;line-height:1.6;padding:4px 0;">没有找到匹配词条</div>
+            </sc-if>
+            <sc-if value="{{lookupErrorVisible}}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12px;color:#9A6B1E;line-height:1.6;padding:4px 0;">{{lookupError}}</div>
+            </sc-if>
+          </div>
+        </sc-if>
         <sc-for list="{{docs}}" as="doc" hint-placeholder-count="3">
           <div onClick="{{doc.onClick}}" style="{{doc.cardStyle}}">
             <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
@@ -481,6 +511,7 @@ class Component extends DCLogic {
       activeDoc: 'd1',
       sideTab: 'glossary',
       hoveredTerm: null, tipX: 0, tipY: 0,
+      lookupQuery: '', lookupResults: [], lookupLoading: false, lookupError: '', selectedTermId: null,
       ballOpen: true,
       accountOpen: false, signedIn: false,
       loading: true, loadError: '',
@@ -489,6 +520,7 @@ class Component extends DCLogic {
     };
     this.onTermEnter = this.onTermEnter.bind(this);
     this.onTermLeave = this.onTermLeave.bind(this);
+    this.onLookupInput = this.onLookupInput.bind(this);
   }
 
   TERMS = {};
@@ -536,6 +568,73 @@ class Component extends DCLogic {
       })
       .then(data => this.setState({ signedIn: !!data.signedIn, accountOpen: false }))
       .catch(() => this.setState({ signedIn, accountOpen: false }));
+  }
+
+  localLookup(query) {
+    const q = String(query || '').trim().toLowerCase();
+    if (!q) return [];
+
+    return Object.entries(this.TERMS).map(([id, term]) => {
+      const fields = [term.en, term.zh, term.domain, term.defn, term.recommended, term.context, ...(term.common || [])]
+        .map(v => String(v || '').toLowerCase());
+      const exact = fields.some(v => v === q);
+      const startsWith = fields.some(v => v.startsWith(q));
+      const includes = fields.some(v => v.includes(q));
+      if (!exact && !startsWith && !includes) return null;
+
+      return { id, ...term, commonStr: (term.common || []).join(' / '), score: exact ? 3 : (startsWith ? 2 : 1) };
+    }).filter(Boolean).sort((a, b) => b.score - a.score || a.en.localeCompare(b.en)).slice(0, 8);
+  }
+
+  runLookup(query) {
+    const q = String(query || '').trim();
+    const seq = (this._lookupSeq || 0) + 1;
+    this._lookupSeq = seq;
+
+    if (!q) {
+      this.setState({ lookupResults: [], lookupLoading: false, lookupError: '', selectedTermId: null });
+      return;
+    }
+
+    this.setState({ lookupLoading: true, lookupError: '' });
+    fetch('/api/lookup?q=' + encodeURIComponent(q))
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(data => {
+        if (seq !== this._lookupSeq) return;
+        this.setState({ lookupResults: data.results || [], lookupLoading: false, lookupError: '' });
+      })
+      .catch(() => {
+        if (seq !== this._lookupSeq) return;
+        const fallback = this.localLookup(q);
+        this.setState({
+          lookupResults: fallback,
+          lookupLoading: false,
+          lookupError: fallback.length ? '已使用本地词库结果' : '查词服务暂不可用'
+        });
+      });
+  }
+
+  onLookupInput(e) {
+    const query = e.currentTarget.value;
+    this.setState({ lookupQuery: query });
+    this.runLookup(query);
+  }
+
+  clearLookup() {
+    this._lookupSeq = (this._lookupSeq || 0) + 1;
+    this.setState({ lookupQuery: '', lookupResults: [], lookupLoading: false, lookupError: '', selectedTermId: null });
+  }
+
+  selectLookupTerm(id) {
+    if (!this.TERMS[id]) return;
+    this.setState(s => ({
+      selectedTermId: id,
+      sideTab: 'explain',
+      mobileTab: s.viewportW <= 760 ? 'terms' : s.mobileTab
+    }));
   }
 
   onTermEnter(e) {
@@ -601,15 +700,24 @@ class Component extends DCLogic {
       ? { ...base, fontWeight: 600, color: '#1B1D22', borderBottom: '2px solid #2F5BD0' }
       : { ...base, fontWeight: 500, color: '#8A8F98', borderBottom: '2px solid transparent' };
   }
+  lookupItemStyle(active) {
+    return {
+      padding: '10px 0',
+      borderTop: '1px solid #F1EDE5',
+      cursor: 'pointer',
+      background: active ? '#F8FAFF' : 'transparent'
+    };
+  }
 
   buildSegs(arr, kind) {
     const underline = this.props.termUnderline !== false;
     const hov = this.state.hoveredTerm;
+    const selected = this.state.selectedTermId;
     return (arr || []).map((s, i) => {
       const isTerm = !!s.k;
       let style = {};
       if (isTerm) {
-        const active = s.k === hov;
+        const active = s.k === hov || s.k === selected;
         style = {
           cursor: 'help', borderRadius: '2px', padding: '0 1px', transition: 'background .12s', color: '#1B1D22',
           borderBottom: underline ? (kind === 'o' ? '1.5px dotted #2F5BD0' : '1.5px dotted #B07D2A') : '1px solid transparent',
@@ -683,7 +791,9 @@ class Component extends DCLogic {
     const showOcrResult = showOcr && hasOcr;
     const showDrop = showOcr && !hasOcr;
 
-    const usedTerms = (doc.terms || []).map(id => this.TERMS[id] ? ({ id, ...this.TERMS[id] }) : null).filter(Boolean);
+    const docTerms = (doc.terms || []).map(id => this.TERMS[id] ? ({ id, ...this.TERMS[id] }) : null).filter(Boolean);
+    const selectedTerm = S.selectedTermId && this.TERMS[S.selectedTermId] ? ({ id: S.selectedTermId, ...this.TERMS[S.selectedTermId] }) : null;
+    const usedTerms = selectedTerm && !docTerms.some(t => t.id === selectedTerm.id) ? [selectedTerm, ...docTerms] : docTerms;
     const ambig = usedTerms.filter(t => t.note);
     const sideDefs = [{ id: 'glossary', label: '术语表', n: usedTerms.length }, { id: 'explain', label: '词汇解释', n: usedTerms.length }, { id: 'ambig', label: '歧义说明', n: ambig.length }];
     const sideTabs = sideDefs.map(t => ({ id: t.id, label: t.label, n: t.n, onClick: () => this.setSide(t.id), style: this.tabStyle(S.sideTab === t.id) }));
@@ -697,9 +807,30 @@ class Component extends DCLogic {
       tipStyle = { position: 'fixed', left: left + 'px', top: (S.tipY + 18) + 'px', zIndex: 60, width: '300px' };
     }
 
+    const lookupQuery = S.lookupQuery || '';
+    const lookupVisible = !!lookupQuery.trim();
+    const lookupResults = (S.lookupResults || []).map(item => ({
+      ...item,
+      onClick: () => this.selectLookupTerm(item.id),
+      style: this.lookupItemStyle(S.selectedTermId === item.id)
+    }));
+    const lookupHasResults = lookupVisible && !S.lookupLoading && lookupResults.length > 0;
+    const lookupEmpty = lookupVisible && !S.lookupLoading && !S.lookupError && lookupResults.length === 0;
+
     return {
       readingFont,
       libraryCount: docs.length + placeholders.length,
+      lookupQuery,
+      lookupResults,
+      lookupVisible,
+      lookupHasResults,
+      lookupEmpty,
+      lookupLoading: S.lookupLoading,
+      lookupError: S.lookupError,
+      lookupErrorVisible: !!S.lookupError,
+      onLookupInput: this.onLookupInput,
+      clearLookup: () => this.clearLookup(),
+      lookupInputStyle: { flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: '12.5px', color: '#2A2D33', fontFamily: 'inherit' },
       layouts, modes, docs, placeholders,
       docTitle: doc.title, docSource: doc.source, domainText: doc.domain, conf: doc.conf + '%',
       showSentence, showFlow, showOcr, showOcrResult, showDrop,

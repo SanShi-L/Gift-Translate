@@ -84,6 +84,47 @@ function docSummary(id) {
   };
 }
 
+function normalizeSearchText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function termSearchFields(term) {
+  return [
+    term.en,
+    term.zh,
+    term.domain,
+    term.defn,
+    term.recommended,
+    term.context,
+    ...(Array.isArray(term.common) ? term.common : [])
+  ].map(normalizeSearchText).filter(Boolean);
+}
+
+function lookupTerms(query) {
+  const q = normalizeSearchText(query);
+  if (!q) return [];
+
+  return Object.entries(data.terms)
+    .map(([id, term]) => {
+      const fields = termSearchFields(term);
+      const exact = fields.some((field) => field === q);
+      const startsWith = fields.some((field) => field.startsWith(q));
+      const includes = fields.some((field) => field.includes(q));
+      if (!exact && !startsWith && !includes) return null;
+
+      const score = exact ? 3 : startsWith ? 2 : 1;
+      return {
+        id,
+        ...term,
+        commonStr: Array.isArray(term.common) ? term.common.join(" / ") : "",
+        score
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score || a.en.localeCompare(b.en))
+    .slice(0, 8);
+}
+
 async function handleApi(req, res, url) {
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
@@ -124,6 +165,15 @@ async function handleApi(req, res, url) {
 
   if (url.pathname === "/api/terms" && req.method === "GET") {
     sendJson(res, 200, data.terms);
+    return true;
+  }
+
+  if (url.pathname === "/api/lookup" && req.method === "GET") {
+    const query = url.searchParams.get("q") || "";
+    sendJson(res, 200, {
+      query,
+      results: lookupTerms(query)
+    });
     return true;
   }
 

@@ -22,6 +22,7 @@ Then open:
 - `GET /api/bootstrap`
 - `GET /api/docs`
 - `GET /api/docs/:id`
+- `GET /api/lookup?q=token`
 - `GET /api/terms`
 - `GET /api/terms/:id`
 - `GET /api/session`
