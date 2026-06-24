@@ -527,6 +527,7 @@ class Component extends DCLogic {
   DOCS = {};
   LIBRARY = [];
   PLACEHOLDERS = [];
+  LOOKUP_TERMS = {};
 
   loadBootstrap() {
     fetch('/api/bootstrap')
@@ -604,11 +605,14 @@ class Component extends DCLogic {
       })
       .then(data => {
         if (seq !== this._lookupSeq) return;
-        this.setState({ lookupResults: data.results || [], lookupLoading: false, lookupError: '' });
+        const results = data.results || [];
+        results.forEach(item => { this.LOOKUP_TERMS[item.id] = item; });
+        this.setState({ lookupResults: results, lookupLoading: false, lookupError: data.message || '' });
       })
       .catch(() => {
         if (seq !== this._lookupSeq) return;
         const fallback = this.localLookup(q);
+        fallback.forEach(item => { this.LOOKUP_TERMS[item.id] = item; });
         this.setState({
           lookupResults: fallback,
           lookupLoading: false,
@@ -629,7 +633,7 @@ class Component extends DCLogic {
   }
 
   selectLookupTerm(id) {
-    if (!this.TERMS[id]) return;
+    if (!this.TERMS[id] && !this.LOOKUP_TERMS[id]) return;
     this.setState(s => ({
       selectedTermId: id,
       sideTab: 'explain',
@@ -792,12 +796,13 @@ class Component extends DCLogic {
     const showDrop = showOcr && !hasOcr;
 
     const docTerms = (doc.terms || []).map(id => this.TERMS[id] ? ({ id, ...this.TERMS[id] }) : null).filter(Boolean);
-    const selectedTerm = S.selectedTermId && this.TERMS[S.selectedTermId] ? ({ id: S.selectedTermId, ...this.TERMS[S.selectedTermId] }) : null;
+    const selectedSource = S.selectedTermId && (this.TERMS[S.selectedTermId] || this.LOOKUP_TERMS[S.selectedTermId]);
+    const selectedTerm = selectedSource ? ({ id: S.selectedTermId, ...selectedSource }) : null;
     const usedTerms = selectedTerm && !docTerms.some(t => t.id === selectedTerm.id) ? [selectedTerm, ...docTerms] : docTerms;
     const ambig = usedTerms.filter(t => t.note);
     const sideDefs = [{ id: 'glossary', label: '术语表', n: usedTerms.length }, { id: 'explain', label: '词汇解释', n: usedTerms.length }, { id: 'ambig', label: '歧义说明', n: ambig.length }];
     const sideTabs = sideDefs.map(t => ({ id: t.id, label: t.label, n: t.n, onClick: () => this.setSide(t.id), style: this.tabStyle(S.sideTab === t.id) }));
-    const glossary = usedTerms.map(t => ({ ...t, commonStr: t.common.join(' / ') }));
+    const glossary = usedTerms.map(t => ({ ...t, commonStr: (t.common || []).join(' / ') }));
 
     const hv = S.hoveredTerm && this.TERMS[S.hoveredTerm] ? this.TERMS[S.hoveredTerm] : null;
     let tipStyle = { display: 'none' };
